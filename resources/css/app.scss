@@ -1,3 +1,102 @@
+/* resources/css/app.scss */
+
+/* --------------------------------------------------
+   Design tokens
+-------------------------------------------------- */
+
+:root {
+    font-family: Arial, Helvetica, sans-serif;
+    color-scheme: light;
+
+    --color-page: #fdfdfc;
+    --color-surface: #ffffff;
+    --color-text: #1b1b18;
+    --color-muted: #706f6c;
+    --color-border: #e3e3e0;
+    --color-accent: #f53003;
+    --color-illustration: #fff2f2;
+
+    --shadow-card: inset 0 0 0 1px rgba(26, 26, 0, 0.16);
+    --page-padding: 1.5rem;
+    --content-width: 64rem;
+    --radius: 0.5rem;
+}
+
+:root.dark {
+    color-scheme: dark;
+
+    --color-page: #0a0a0a;
+    --color-surface: #161615;
+    --color-text: #ed edec;
+    --color-muted: #a1a09a;
+    --color-border: #3e3e3a;
+    --color-accent: #ff4433;
+    --color-illustration: #1d0002;
+
+    --shadow-card: inset 0 0 0 1px #fffaed2d;
+}
+
+/* --------------------------------------------------
+   Base
+-------------------------------------------------- */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 320px;
+    min-height: 100%;
+    background: var(--color-page);
+}
+
+body,
+#app {
+    min-height: 100vh;
+    margin: 0;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    color: var(--color-text);
+    background: var(--color-page);
+    line-height: 1.5;
+}
+
+a {
+    color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+img,
+svg {
+    display: block;
+    max-width: 100%;
+}
+
+/* --------------------------------------------------
+   Shared application layout
+-------------------------------------------------- */
+
+.app-body {
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 .page-layout {
     display: flex;
     width: 100%;
@@ -7,5 +106,300 @@
 .page-content {
     width: 100%;
     max-width: 48rem;
+    padding: var(--page-padding);
+}
+
+/* --------------------------------------------------
+   Welcome page
+-------------------------------------------------- */
+
+.welcome-page {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 1.5rem;
+    color: var(--color-text);
+    background: var(--color-page);
+}
+
+.welcome-page__inner {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    animation: welcome-fade-in 750ms ease both;
+}
+
+.welcome-card {
+    display: flex;
+    width: 100%;
+    max-width: 64rem;
+    flex-direction: column-reverse;
+}
+
+.welcome-card__content {
+    flex: 1;
+    padding: 1.5rem 1.5rem 3rem;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+}
+
+.welcome-card__title {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.welcome-card__description {
+    margin: 0 0 0.5rem;
+    color: var(--color-muted);
+}
+
+.welcome-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.welcome-links__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.welcome-links__marker {
+    position: relative;
+    display: inline-flex;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 1.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-page);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.welcome-links__marker::after {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    background: var(--color-border);
+    content: "";
+}
+
+.welcome-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.25rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    text-underline-offset: 4px;
+}
+
+.welcome-link svg {
+    width: 0.625rem;
+    height: 0.6875rem;
+}
+
+.welcome-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.welcome-button {
+    display: inline-block;
+    padding: 0.375rem 1.25rem;
+    border: 1px solid var(--color-text);
+    border-radius: 0.125rem;
+    color: #fff;
+    background: var(--color-text);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-decoration: none;
+    transition:
+        color 150ms ease,
+        background-color 150ms ease,
+        border-color 150ms ease;
+}
+
+.welcome-button:hover {
+    border-color: #000;
+    background: #000;
+}
+
+.welcome-card__art {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 335 / 364;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--color-illustration);
+}
+
+.welcome-card__art > svg:first-child {
+    width: 100%;
+    max-width: none;
+    color: var(--color-accent);
+    animation: welcome-fade-in 750ms ease both;
+}
+
+.welcome-card__art > svg:nth-child(2) {
+    position: relative;
+    width: 438px;
+    max-width: none;
+    margin-top: -6.6rem;
+    margin-left: -2rem;
+    --stroke-color: #1b1b18;
+}
+
+.welcome-card__art-frame {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--shadow-card);
+    pointer-events: none;
+}
+
+/* --------------------------------------------------
+   Dark appearance
+-------------------------------------------------- */
+
+.dark .welcome-card__content {
+    color: #ed edec;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+}
+
+.dark .welcome-links__marker {
+    background: var(--color-surface);
+}
+
+.dark .welcome-card__art > svg:first-child {
+    color: #f61500;
+}
+
+.dark .welcome-card__art > svg:nth-child(2) {
+    --stroke-color: #ff750f;
+}
+
+.dark .welcome-button {
+    border-color: #eeeeec;
+    color: #1c1c1a;
+    background: #eeeeec;
+}
+
+.dark .welcome-button:hover {
+    border-color: #fff;
+    background: #fff;
+}
+
+/* --------------------------------------------------
+   Responsive
+-------------------------------------------------- */
+
+@media (min-width: 1024px) {
+    .welcome-page {
+        padding: 2rem;
+    }
+
+    .welcome-card {
+        flex-direction: row;
+    }
+
+    .welcome-card__content {
+        padding: 5rem;
+        border-radius: var(--radius) 0 0 var(--radius);
+    }
+
+    .welcome-links {
+        margin-bottom: 1.5rem;
+    }
+
+    .welcome-card__art {
+        width: 438px;
+        aspect-ratio: auto;
+        border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .welcome-card__art > svg:nth-child(2) {
+        margin-left: 0;
+    }
+}
+
+/* --------------------------------------------------
+   Motion preferences
+-------------------------------------------------- */
+
+@keyframes welcome-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.welcome-art {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+    color: #f53003;
+    text-align: center;
+}
+
+.welcome-art__number {
+    font-size: clamp(6rem, 18vw, 12rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.09em;
+}
+
+.welcome-art__word {
+    font-size: clamp(1.75rem, 5vw, 3rem);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.welcome-art__caption {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dark .welcome-art {
+    color: #f61500;
 }

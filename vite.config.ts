@@ -14,6 +14,7 @@ export default defineConfig({
             fonts: [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
+                    optimizeFallback: false
                 }),
             ],
         }),
@@ -26,6 +27,10 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    build: {
+        cssMinify: false,
+        minify: false
+    },
     server: {
         watch: {
             ignored: [
@@ -35,6 +40,7 @@ export default defineConfig({
                 '**/.junie/**',
                 '**/vendor/**',
             ],
+            usePolling: true
         },
     },
     lint: {
