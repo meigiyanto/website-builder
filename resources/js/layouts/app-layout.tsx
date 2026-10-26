@@ -35,9 +35,10 @@ const navigation = [
 export default function AppLayout({ children }: AppLayoutProps) {
     const { url } = usePage();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     return (
-        <div className="app-shell">
+        <div className={`app-shell${sidebarCollapsed ? ' app-shell--sidebar-collapsed' : ''}`}>
             {sidebarOpen && (
                 <button
                     type="button"
@@ -132,6 +133,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <div className="app-main">
                 <header className="app-header">
                     <div className="app-header__left">
+                        <button
+                            type="button"
+                            className="app-header__collapse"
+                            aria-label={sidebarCollapsed ? 'Perlebar sidebar' : 'Ciutkan sidebar'}
+                            aria-expanded={!sidebarCollapsed}
+                            title={sidebarCollapsed ? 'Perlebar sidebar' : 'Ciutkan sidebar'}
+                            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+                        >
+                            <span aria-hidden="true">
+                                {sidebarCollapsed ? '»' : '«'}
+                            </span>
+                        </button>
                         <button
                             type="button"
                             className="app-header__menu"
