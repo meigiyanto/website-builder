@@ -204,6 +204,7 @@ export default function EditorLayout({
                                 
                                         <div className="editor-block-grid">
                                             {items.map((block) => (
+                                                
                                                 <button
                                                     key={block.id}
                                                     type="button"
@@ -223,6 +224,7 @@ export default function EditorLayout({
                                                     <span aria-hidden="true">{block.icon}</span>
                                                     {block.label}
                                                 </button>
+
                                             ))}
                                         </div>
                                     </section>

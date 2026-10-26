@@ -121,18 +121,16 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             };
         });
         
-        editor.on('block:custom', ({ bm, dragStart, drag, dragStop }) => {
-            blockDragHandlersRef.current = {
-                start: (blockId, event) => {
-                    const block = bm.get(blockId);
-        
-                    if (block) {
-                        dragStart(block, event);
-                    }
+        elementRegistry.forEach((block) => {
+            editor.BlockManager.add(block.id, {
+                label: `${block.icon} ${block.label}`,
+                category: block.category,
+                content: block.content,
+                select: true,
+                attributes: {
+                    title: block.label,
                 },
-                drag,
-                stop: () => dragStop(),
-            };
+            });
         });
 
         editor.setComponents(`
