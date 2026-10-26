@@ -41,7 +41,7 @@ type BlockDragHandlers = {
     stop: () => void;
 };
 
-
+/*
 function getSelectedStyles(editor: Editor): InspectorStyles {
     const selected = editor.getSelected();
 
@@ -82,6 +82,40 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
         margin: readStyle('margin'),
         padding: readStyle('padding'),
         borderRadius: readStyle('border-radius') || readStyle('borderRadius'),
+    };
+}
+*/
+
+function getSelectedStyles(editor: Editor): InspectorStyles {
+    const selected = editor.getSelected();
+
+    if (!selected) {
+        return emptyStyles;
+    }
+
+    const inlineStyles = selected.getStyle() as Record<string, string>;
+    const element = selected.getEl();
+    const view = element?.ownerDocument?.defaultView;
+
+    const computedStyles = element && view ? view.getComputedStyle(element) : null;
+
+    const readStyle = ( cssProperty: string, camelCaseProperty: string ): string => {
+        // Prioritaskan gaya yang ditetapkan langsung pada komponen.
+        const inlineValue = inlineStyles[cssProperty] ?? inlineStyles[camelCaseProperty];
+
+        if (inlineValue) {
+            return inlineValue;
+        }
+
+        // Jika tidak ada, baca gaya efektif dari kanvas.
+        return (computedStyles?.getPropertyValue(cssProperty).trim() ||'');
+    };
+
+    return {
+        color: readStyle('color', 'color'),
+        backgroundColor: readStyle('background-color','backgroundColor'),
+        padding: readStyle('padding', 'padding'),
+        fontSize: readStyle('font-size', 'fontSize'),
     };
 }
 
