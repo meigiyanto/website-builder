@@ -344,14 +344,10 @@ export default function EditorLayout({
                                 className="editor-icon-button"
                                 onClick={onToggleSettings}
                                 aria-label={
-                                    settingsOpen
-                                        ? 'Ciutkan panel pengaturan'
-                                        : 'Buka panel pengaturan'
+                                    settingsOpen ? 'Ciutkan panel pengaturan' : 'Buka panel pengaturan'
                                 }
                                 title={
-                                    settingsOpen
-                                        ? 'Ciutkan panel pengaturan'
-                                        : 'Buka panel pengaturan'
+                                    settingsOpen ? 'Ciutkan panel pengaturan' : 'Buka panel pengaturan'
                                 }
                             >
                                 {settingsOpen ? '»' : '«'}
@@ -591,29 +587,67 @@ export default function EditorLayout({
                                     
                                         <section className="editor-inspector-section">
                                             <p className="editor-inspector-section__title">Warna</p>
-                                    
+                                        
                                             <label className="editor-field">
                                                 <span>Warna teks</span>
-                                                <input
-                                                    type="text"
-                                                    value={styles.color}
-                                                    placeholder="#24263a"
-                                                    onChange={(event) =>
-                                                        onStyleChange('color', event.target.value)
-                                                    }
-                                                />
+                                        
+                                                <div className="editor-color-control">
+                                                    <input
+                                                        type="color"
+                                                        aria-label="Pilih warna teks"
+                                                        value={
+                                                            /^#[0-9a-fA-F]{6}$/.test(styles.color)
+                                                                ? styles.color
+                                                                : '#24263a'
+                                                        }
+                                                        onChange={(event) =>
+                                                            onStyleChange('color', event.target.value)
+                                                        }
+                                                    />
+                                        
+                                                    <input
+                                                        type="text"
+                                                        value={styles.color}
+                                                        placeholder="#24263a"
+                                                        onChange={(event) =>
+                                                            onStyleChange('color', event.target.value)
+                                                        }
+                                                    />
+                                                </div>
                                             </label>
-                                    
+                                        
                                             <label className="editor-field">
                                                 <span>Warna latar</span>
-                                                <input
-                                                    type="text"
-                                                    value={styles.backgroundColor}
-                                                    placeholder="#ffffff atau transparent"
-                                                    onChange={(event) =>
-                                                        onStyleChange('backgroundColor', event.target.value)
-                                                    }
-                                                />
+                                        
+                                                <div className="editor-color-control">
+                                                    <input
+                                                        type="color"
+                                                        aria-label="Pilih warna latar"
+                                                        value={
+                                                            /^#[0-9a-fA-F]{6}$/.test(styles.backgroundColor)
+                                                                ? styles.backgroundColor
+                                                                : '#ffffff'
+                                                        }
+                                                        onChange={(event) =>
+                                                            onStyleChange(
+                                                                'backgroundColor',
+                                                                event.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                        
+                                                    <input
+                                                        type="text"
+                                                        value={styles.backgroundColor}
+                                                        placeholder="#ffffff atau transparent"
+                                                        onChange={(event) =>
+                                                            onStyleChange(
+                                                                'backgroundColor',
+                                                                event.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
                                             </label>
                                         </section>
                                     
@@ -631,12 +665,7 @@ export default function EditorLayout({
                                                         type="text"
                                                         value={styles[property as keyof InspectorStyles] as string}
                                                         placeholder="Contoh: 16px"
-                                                        onChange={(event) =>
-                                                            onStyleChange(
-                                                                property as InspectorProperty,
-                                                                event.target.value,
-                                                            )
-                                                        }
+                                                        onChange={(event) => onStyleChange( property as InspectorProperty, event.target.value, )}
                                                     />
                                                 </label>
                                             ))}

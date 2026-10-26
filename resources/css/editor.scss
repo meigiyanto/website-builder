@@ -569,3 +569,26 @@ body,
 .editor-field textarea:focus {
     border-color: var(--editor-primary);
 }
+
+.editor-color-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.editor-color-control input[type="color"] {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 38px;
+    padding: 3px;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+}
+
+.editor-color-control input[type="text"] {
+    flex: 1;
+    min-width: 0;
+}
