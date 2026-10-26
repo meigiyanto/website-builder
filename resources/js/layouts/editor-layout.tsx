@@ -1,25 +1,17 @@
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-
-export type EditorBlock = {
-    category: string;
-    id: string;
-    label: string;
-    icon: string;
-    content: string;
-};
-
-export type InspectorStyles = {
-    color: string;
-    backgroundColor: string;
-    padding: string;
-    fontSize: string;
-};
+import type { EditorBlock } from '../lib/website-builder/element-registry';
+import { elementCategories, elementRegistry } from '../lib/website-builder/element-registry';
 
 type EditorLayoutProps = {
     children: ReactNode;
     websiteName: string;
     blocks: EditorBlock[];
+    categories: readonly string[];
+    searchValue: string;
+    categoryFilter: string;
+    onSearchChange: (value: string) => void;
+    onCategoryFilterChange: (value: string) => void;
     blocksOpen: boolean;
     settingsOpen: boolean;
     preview: boolean;
@@ -33,6 +25,13 @@ type EditorLayoutProps = {
         property: keyof InspectorStyles,
         value: string,
     ) => void;
+};
+
+export type InspectorStyles = {
+    color: string;
+    backgroundColor: string;
+    padding: string;
+    fontSize: string;
 };
 
 export default function EditorLayout({
@@ -49,19 +48,43 @@ export default function EditorLayout({
     onTogglePreview,
     onAddBlock,
     onStyleChange,
+    categories,
+    searchValue,
+    categoryFilter,
+    onSearchChange,
+    onCategoryFilterChange,
 }: EditorLayoutProps) {
 
-    const groupedBlocks = blocks.reduce<Record<string, EditorBlock[]>>((groups, block) => {
-        const category = block.category || "Lainnya";
+    const query = searchValue.trim().toLocaleLowerCase();
 
-        if (!groups[category]) {
-            groups[category] = [];
-        }
-
-        groups[category].push(block);
-
-        return groups;
-    },{});
+    const filteredBlocks = blocks.filter((block) => {
+        const matchesCategory =
+            categoryFilter === 'Semua' ||
+            block.category === categoryFilter;
+    
+        const searchable = [
+            block.label,
+            block.category,
+            block.id,
+        ]
+            .join(' ')
+            .toLocaleLowerCase();
+    
+        return (
+            matchesCategory &&
+            (!query || searchable.includes(query))
+        );
+    });
+    
+    const groupedBlocks = categories
+        .filter((category) => category !== 'Semua')
+        .map((category) => ({
+            category,
+            items: filteredBlocks.filter(
+                (block) => block.category === category,
+            ),
+        }))
+        .filter((group) => group.items.length > 0);
 
     return (
         <div className={`editor-shell${preview ? ' is-preview' : ''}`}>
@@ -132,24 +155,89 @@ export default function EditorLayout({
 
                         {blocksOpen && (
                             <div className="editor-panel__content">
-                                <p className="editor-panel__description">ELEMENT DASAR</p>
-                                {Object.entries(groupedBlocks).map(([category, categoryBlocks]) => (
-                                    <>
-                                        <p>{category}</p>
+                                <p className="editor-panel__description">KATALOG ELEMENT</p>
+                                
+                                <label className="editor-catalog-search">
+                                    <span className="sr-only">Cari elemen</span>
+                                    <input
+                                        type="search"
+                                        value={searchValue}
+                                        onChange={(event) =>
+                                            onSearchChange(event.target.value)
+                                        }
+                                        placeholder="Cari elemen..."
+                                        aria-label="Cari elemen"
+                                    />
+                                </label>
+                                
+                                <label className="editor-catalog-category">
+                                    <span className="sr-only">Filter kategori</span>
+                                    <select
+                                        value={categoryFilter}
+                                        onChange={(event) =>
+                                            onCategoryFilterChange(event.target.value)
+                                        }
+                                        aria-label="Filter kategori elemen"
+                                    >
+                                        {categories.map((category) => (
+                                            <option key={category} value={category}>
+                                                {category}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                
+                                {groupedBlocks.map(({ category, items }) => (
+                                    <section
+                                        className="editor-block-category"
+                                        key={category}
+                                    >
+                                        <p className="editor-block-category__title">
+                                            {category}
+                                        </p>
+                                
                                         <div className="editor-block-grid">
-                                            {categoryBlocks.map((block) => (
+                                            {items.map((block) => (
                                                 <button
                                                     key={block.id}
                                                     type="button"
-                                                    onClick={() => onAddBlock(block)}
+                                                    draggable
                                                     className="editor-block"
+                                                    title={`${block.label}: klik atau seret ke kanvas`}
+                                                    onClick={() => onAddBlock(block)}
+                                                    onDragStart={(event) => {
+                                                        event.dataTransfer.effectAllowed = 'copy';
+                                                        event.dataTransfer.setData(
+                                                            'text/html',
+                                                            block.content,
+                                                        );
+                                                        event.dataTransfer.setData(
+                                                            'text/plain',
+                                                            block.id,
+                                                        );
+                                                        event.dataTransfer.setData(
+                                                            'application/x-website-builder-block',
+                                                            block.id,
+                                                        );
+                                                    }}
                                                 >
-                                                    <span aria-hidden="true">{block.icon}</span> {block.label}
+                                                    <span aria-hidden="true">
+                                                        {block.icon}
+                                                    </span>
+                                                    {block.label}
                                                 </button>
                                             ))}
                                         </div>
-                                    </>
+                                    </section>
                                 ))}
+                                
+                                {filteredBlocks.length === 0 && (
+                                    <p className="editor-catalog-empty">
+                                        Tidak ada elemen yang cocok.
+                                    </p>
+                                )}
+                                
                                 
                                 <p className="editor-panel__hint">
                                     Klik elemen untuk menambahkannya ke
