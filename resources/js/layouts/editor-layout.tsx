@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 
 export type EditorBlock = {
+    category: string;
     id: string;
     label: string;
     icon: string;
@@ -49,6 +50,19 @@ export default function EditorLayout({
     onAddBlock,
     onStyleChange,
 }: EditorLayoutProps) {
+
+    const groupedBlocks = blocks.reduce<Record<string, EditorBlock[]>>((groups, block) => {
+        const category = block.category || "Lainnya";
+
+        if (!groups[category]) {
+            groups[category] = [];
+        }
+
+        groups[category].push(block);
+
+        return groups;
+    },{});
+
     return (
         <div className={`editor-shell${preview ? ' is-preview' : ''}`}>
             <header className="editor-toolbar">
@@ -106,14 +120,10 @@ export default function EditorLayout({
                                 className="editor-icon-button"
                                 onClick={onToggleBlocks}
                                 aria-label={
-                                    blocksOpen
-                                        ? 'Ciutkan panel elemen'
-                                        : 'Buka panel elemen'
+                                    blocksOpen ? 'Ciutkan panel elemen' : 'Buka panel elemen'
                                 }
                                 title={
-                                    blocksOpen
-                                        ? 'Ciutkan panel elemen'
-                                        : 'Buka panel elemen'
+                                    blocksOpen ? 'Ciutkan panel elemen' : 'Buka panel elemen'
                                 }
                             >
                                 {blocksOpen ? '«' : '»'}
@@ -122,27 +132,25 @@ export default function EditorLayout({
 
                         {blocksOpen && (
                             <div className="editor-panel__content">
-                                <p className="editor-panel__description">
-                                    ELEMEN DASAR
-                                </p>
-
-                                <div className="editor-block-grid">
-                                    {blocks.map((block) => (
-                                        <button
-                                            key={block.id}
-                                            type="button"
-                                            className="editor-block"
-                                            onClick={() => onAddBlock(block)}
-                                            title={`Tambahkan ${block.label} ke kanvas`}
-                                        >
-                                            <span aria-hidden="true">
-                                                {block.icon}
-                                            </span>
-                                            {block.label}
-                                        </button>
-                                    ))}
-                                </div>
-
+                                <p className="editor-panel__description">ELEMENT DASAR</p>
+                                {Object.entries(groupedBlocks).map(([category, categoryBlocks]) => (
+                                    <>
+                                        <p>{category}</p>
+                                        <div className="editor-block-grid">
+                                            {categoryBlocks.map((block) => (
+                                                <button
+                                                    key={block.id}
+                                                    type="button"
+                                                    onClick={() => onAddBlock(block)}
+                                                    className="editor-block"
+                                                >
+                                                    <span aria-hidden="true">{block.icon}</span> {block.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                ))}
+                                
                                 <p className="editor-panel__hint">
                                     Klik elemen untuk menambahkannya ke
                                     kanvas. Klik elemen pada kanvas untuk
