@@ -24,17 +24,60 @@ type EditorLayoutProps = {
     onBlockDrag: (event: Event) => void;
     onBlockDragStop: () => void;
     onStyleChange: (
-        property: keyof InspectorStyles,
+        property: InspectorProperty,
         value: string,
     ) => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    onUndo: () => void;
+    onRedo: () => void;
 };
 
 export type InspectorStyles = {
+    tagName: string;
+    content: string;
+    href: string;
+    canEditContent: boolean;
+    isLink: boolean;
     color: string;
     backgroundColor: string;
-    padding: string;
+    fontFamily: string;
     fontSize: string;
+    fontWeight: string;
+    lineHeight: string;
+    textAlign: string;
+    display: string;
+    flexDirection: string;
+    justifyContent: string;
+    alignItems: string;
+    gap: string;
+    width: string;
+    maxWidth: string;
+    margin: string;
+    padding: string;
+    borderRadius: string;
 };
+
+export type InspectorProperty =
+    | 'content'
+    | 'href'
+    | 'color'
+    | 'backgroundColor'
+    | 'fontFamily'
+    | 'fontSize'
+    | 'fontWeight'
+    | 'lineHeight'
+    | 'textAlign'
+    | 'display'
+    | 'flexDirection'
+    | 'justifyContent'
+    | 'alignItems'
+    | 'gap'
+    | 'width'
+    | 'maxWidth'
+    | 'margin'
+    | 'padding'
+    | 'borderRadius';
 
 export default function EditorLayout({
     children,
@@ -58,6 +101,10 @@ export default function EditorLayout({
     onBlockDrag,
     onBlockDragStop,
     onCategoryFilterChange,
+    canUndo,
+    canRedo,
+    onUndo,
+    onRedo,
 }: EditorLayoutProps) {
 
     const query = searchValue.trim().toLocaleLowerCase();
@@ -114,6 +161,27 @@ export default function EditorLayout({
                 </div>
 
                 <div className="editor-toolbar__actions">
+                    <button
+                        type="button"
+                        className="editor-button editor-button--subtle"
+                        onClick={onUndo}
+                        disabled={!canUndo}
+                        aria-label="Undo"
+                        title="Undo (Ctrl+Z)"
+                    >
+                        ↶ Undo
+                    </button>
+                    
+                    <button
+                        type="button"
+                        className="editor-button editor-button--subtle"
+                        onClick={onRedo}
+                        disabled={!canRedo}
+                        aria-label="Redo"
+                        title="Redo (Ctrl+Shift+Z)"
+                    >
+                        ↷ Redo
+                    </button>
                     <button
                         type="button"
                         className="editor-button editor-button--subtle"
@@ -311,70 +379,270 @@ export default function EditorLayout({
                                     <div className="editor-inspector-form">
                                         <div className="editor-selected-name">
                                             <span className="editor-selection-dot" />
-                                            <strong>{selectedElement}</strong>
+                                            <strong>{`<${styles.tagName}>`}</strong>
                                         </div>
-
-                                        <label className="editor-field">
-                                            <span>Warna teks</span>
-                                            <input
-                                                type="color"
-                                                value={styles.color || '#222222'}
-                                                onChange={(event) =>
-                                                    onStyleChange(
-                                                        'color',
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
-
-                                        <label className="editor-field">
-                                            <span>Warna latar</span>
-                                            <input
-                                                type="color"
-                                                value={
-                                                    styles.backgroundColor ||
-                                                    '#ffffff'
-                                                }
-                                                onChange={(event) =>
-                                                    onStyleChange(
-                                                        'backgroundColor',
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
-
-                                        <label className="editor-field">
-                                            <span>Padding</span>
-                                            <input
-                                                type="text"
-                                                value={styles.padding}
-                                                placeholder="Contoh: 16px"
-                                                onChange={(event) =>
-                                                    onStyleChange(
-                                                        'padding',
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
-
-                                        <label className="editor-field">
-                                            <span>Ukuran teks</span>
-                                            <input
-                                                type="text"
-                                                value={styles.fontSize}
-                                                placeholder="Contoh: 24px"
-                                                onChange={(event) =>
-                                                    onStyleChange(
-                                                        'fontSize',
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
+                                    
+                                        {styles.canEditContent && (
+                                            <section className="editor-inspector-section">
+                                                <p className="editor-inspector-section__title">Konten</p>
+                                    
+                                                <label className="editor-field">
+                                                    <span>Teks</span>
+                                                    <textarea
+                                                        value={styles.content}
+                                                        rows={3}
+                                                        onChange={(event) =>
+                                                            onStyleChange('content', event.target.value)
+                                                        }
+                                                    />
+                                                </label>
+                                    
+                                                {styles.isLink && (
+                                                    <label className="editor-field">
+                                                        <span>URL tujuan</span>
+                                                        <input
+                                                            type="text"
+                                                            value={styles.href}
+                                                            placeholder="https://contoh.com"
+                                                            onChange={(event) =>
+                                                                onStyleChange('href', event.target.value)
+                                                            }
+                                                        />
+                                                    </label>
+                                                )}
+                                            </section>
+                                        )}
+                                    
+                                        <section className="editor-inspector-section">
+                                            <p className="editor-inspector-section__title">Layout</p>
+                                    
+                                            <label className="editor-field">
+                                                <span>Display</span>
+                                                <select
+                                                    value={styles.display}
+                                                    onChange={(event) =>
+                                                        onStyleChange('display', event.target.value)
+                                                    }
+                                                >
+                                                    <option value="">Default</option>
+                                                    <option value="block">Block</option>
+                                                    <option value="inline">Inline</option>
+                                                    <option value="inline-block">Inline block</option>
+                                                    <option value="flex">Flex</option>
+                                                    <option value="grid">Grid</option>
+                                                    <option value="none">None</option>
+                                                </select>
+                                            </label>
+                                    
+                                            {styles.display === 'flex' && (
+                                                <>
+                                                    <label className="editor-field">
+                                                        <span>Arah Flex</span>
+                                                        <select
+                                                            value={styles.flexDirection}
+                                                            onChange={(event) =>
+                                                                onStyleChange('flexDirection', event.target.value)
+                                                            }
+                                                        >
+                                                            <option value="">Default</option>
+                                                            <option value="row">Horizontal</option>
+                                                            <option value="column">Vertikal</option>
+                                                            <option value="row-reverse">Horizontal terbalik</option>
+                                                            <option value="column-reverse">Vertikal terbalik</option>
+                                                        </select>
+                                                    </label>
+                                    
+                                                    <label className="editor-field">
+                                                        <span>Justify Content</span>
+                                                        <select
+                                                            value={styles.justifyContent}
+                                                            onChange={(event) =>
+                                                                onStyleChange('justifyContent', event.target.value)
+                                                            }
+                                                        >
+                                                            <option value="">Default</option>
+                                                            <option value="flex-start">Start</option>
+                                                            <option value="center">Center</option>
+                                                            <option value="flex-end">End</option>
+                                                            <option value="space-between">Space between</option>
+                                                            <option value="space-around">Space around</option>
+                                                        </select>
+                                                    </label>
+                                    
+                                                    <label className="editor-field">
+                                                        <span>Align Items</span>
+                                                        <select
+                                                            value={styles.alignItems}
+                                                            onChange={(event) =>
+                                                                onStyleChange('alignItems', event.target.value)
+                                                            }
+                                                        >
+                                                            <option value="">Default</option>
+                                                            <option value="stretch">Stretch</option>
+                                                            <option value="flex-start">Start</option>
+                                                            <option value="center">Center</option>
+                                                            <option value="flex-end">End</option>
+                                                        </select>
+                                                    </label>
+                                                </>
+                                            )}
+                                    
+                                            {[
+                                                ['Lebar', 'width'],
+                                                ['Lebar maksimum', 'maxWidth'],
+                                                ['Gap', 'gap'],
+                                            ].map(([label, property]) => (
+                                                <label className="editor-field" key={property}>
+                                                    <span>{label}</span>
+                                                    <input
+                                                        type="text"
+                                                        value={styles[property as keyof InspectorStyles] as string}
+                                                        placeholder="Contoh: 100% atau 16px"
+                                                        onChange={(event) =>
+                                                            onStyleChange(
+                                                                property as InspectorProperty,
+                                                                event.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                </label>
+                                            ))}
+                                        </section>
+                                    
+                                        <section className="editor-inspector-section">
+                                            <p className="editor-inspector-section__title">Tipografi</p>
+                                    
+                                            <label className="editor-field">
+                                                <span>Font family</span>
+                                                <select
+                                                    value={styles.fontFamily}
+                                                    onChange={(event) =>
+                                                        onStyleChange('fontFamily', event.target.value)
+                                                    }
+                                                >
+                                                    <option value="">Default</option>
+                                                    <option value="Arial, sans-serif">Arial</option>
+                                                    <option value="Helvetica, sans-serif">Helvetica</option>
+                                                    <option value="Georgia, serif">Georgia</option>
+                                                    <option value="'Times New Roman', serif">Times New Roman</option>
+                                                    <option value="Verdana, sans-serif">Verdana</option>
+                                                    <option value="monospace">Monospace</option>
+                                                </select>
+                                            </label>
+                                    
+                                            <label className="editor-field">
+                                                <span>Ukuran teks</span>
+                                                <input
+                                                    type="text"
+                                                    value={styles.fontSize}
+                                                    placeholder="16px"
+                                                    onChange={(event) =>
+                                                        onStyleChange('fontSize', event.target.value)
+                                                    }
+                                                />
+                                            </label>
+                                    
+                                            <label className="editor-field">
+                                                <span>Ketebalan</span>
+                                                <select
+                                                    value={styles.fontWeight}
+                                                    onChange={(event) =>
+                                                        onStyleChange('fontWeight', event.target.value)
+                                                    }
+                                                >
+                                                    <option value="">Default</option>
+                                                    <option value="300">Light</option>
+                                                    <option value="400">Normal</option>
+                                                    <option value="500">Medium</option>
+                                                    <option value="600">Semi-bold</option>
+                                                    <option value="700">Bold</option>
+                                                    <option value="800">Extra-bold</option>
+                                                </select>
+                                            </label>
+                                    
+                                            <label className="editor-field">
+                                                <span>Line height</span>
+                                                <input
+                                                    type="text"
+                                                    value={styles.lineHeight}
+                                                    placeholder="1.5"
+                                                    onChange={(event) =>
+                                                        onStyleChange('lineHeight', event.target.value)
+                                                    }
+                                                />
+                                            </label>
+                                    
+                                            <label className="editor-field">
+                                                <span>Perataan teks</span>
+                                                <select
+                                                    value={styles.textAlign}
+                                                    onChange={(event) =>
+                                                        onStyleChange('textAlign', event.target.value)
+                                                    }
+                                                >
+                                                    <option value="">Default</option>
+                                                    <option value="left">Kiri</option>
+                                                    <option value="center">Tengah</option>
+                                                    <option value="right">Kanan</option>
+                                                    <option value="justify">Rata kiri-kanan</option>
+                                                </select>
+                                            </label>
+                                        </section>
+                                    
+                                        <section className="editor-inspector-section">
+                                            <p className="editor-inspector-section__title">Warna</p>
+                                    
+                                            <label className="editor-field">
+                                                <span>Warna teks</span>
+                                                <input
+                                                    type="text"
+                                                    value={styles.color}
+                                                    placeholder="#24263a"
+                                                    onChange={(event) =>
+                                                        onStyleChange('color', event.target.value)
+                                                    }
+                                                />
+                                            </label>
+                                    
+                                            <label className="editor-field">
+                                                <span>Warna latar</span>
+                                                <input
+                                                    type="text"
+                                                    value={styles.backgroundColor}
+                                                    placeholder="#ffffff atau transparent"
+                                                    onChange={(event) =>
+                                                        onStyleChange('backgroundColor', event.target.value)
+                                                    }
+                                                />
+                                            </label>
+                                        </section>
+                                    
+                                        <section className="editor-inspector-section">
+                                            <p className="editor-inspector-section__title">Spacing dan bentuk</p>
+                                    
+                                            {[
+                                                ['Margin', 'margin'],
+                                                ['Padding', 'padding'],
+                                                ['Border radius', 'borderRadius'],
+                                            ].map(([label, property]) => (
+                                                <label className="editor-field" key={property}>
+                                                    <span>{label}</span>
+                                                    <input
+                                                        type="text"
+                                                        value={styles[property as keyof InspectorStyles] as string}
+                                                        placeholder="Contoh: 16px"
+                                                        onChange={(event) =>
+                                                            onStyleChange(
+                                                                property as InspectorProperty,
+                                                                event.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                </label>
+                                            ))}
+                                        </section>
                                     </div>
+
                                 )}
                             </div>
                         )}
