@@ -3,7 +3,7 @@ import grapesjs, { type Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import EditorLayout, { type InspectorStyles } from '../layouts/editor-layout';
-import { elementCategories, elementRegistry, EditorBlock } from '../lib/website-builder/element-registry';
+import { elementCategories, elementRegistry, type EditorBlock } from '../lib/website-builder/element-registry';
 import '../../css/editor.scss';
 
 type EditorPageProps = {

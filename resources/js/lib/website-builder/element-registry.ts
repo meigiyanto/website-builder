@@ -27,26 +27,26 @@ export const elementCategories = [
 ] as const;
 
 export const elementRegistry: EditorBlock[] = [
-    /* Layout 5 block */
+    /* Tata Letak 5 block */
     {
         id: 'wb-divider',
         label: 'Divider',
         icon: '―',
-        category: 'Layout',
+        category: 'Tata Letak',
         content: `<hr style="border:0;border-top:1px solid #e5e7eb;margin:24px 0;" />`,
     },
     {
         id: 'wb-spacer',
         label: 'Spacer',
         icon: '↕',
-        category: 'Layout',
+        category: 'Tata Letak',
         content: `<div style="height:48px;" aria-hidden="true"></div>`,
     },
     {
         id: 'wb-hero-section',
         label: 'Hero Section',
         icon: '▣',
-        category: 'Layout',
+        category: 'Tata Letak',
         content: `
             <section style="padding:64px 32px;text-align:center;background:linear-gradient(135deg,#f5f3ff,#eef2ff);border-radius:16px;">
                 <p style="color:#6658e8;font-size:12px;font-weight:700;letter-spacing:1.5px;">KENALI PRODUK KAMI</p>
@@ -60,7 +60,7 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-footer',
         label: 'Footer',
         icon: '▤',
-        category: 'Layout',
+        category: 'Tata Letak',
         content: `
             <footer style="padding:32px 24px;background:#202238;color:#fff;border-radius:10px;">
                 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;">
@@ -76,7 +76,7 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-feature-grid',
         label: '3 Feature Columns',
         icon: '▦',
-        category: 'Layout',
+        category: 'Tata Letak',
         content: `
             <section style="padding:36px 20px;">
                 <h2 style="text-align:center;font-size:30px;">Mengapa memilih kami?</h2>
@@ -263,12 +263,12 @@ export const elementRegistry: EditorBlock[] = [
             '<div style="display:flex;gap:20px;align-items:flex-start;margin:0 0 20px;"><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom satu</div><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom dua</div></div>',
     },
     
-    /* Marketing 6 block */
+    /* Pemasaran 6 block */
     {
         id: 'wb-feature-card',
         label: 'Feature Card',
         icon: '✧',
-        category: 'Marketing',
+        category: 'Pemasaran',
         content: `
             <article style="max-width:320px;padding:24px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;">
                 <div style="display:grid;place-items:center;width:48px;height:48px;margin-bottom:18px;border-radius:12px;background:#f0edff;color:#6658e8;font-size:24px;">✦</div>
@@ -281,7 +281,7 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-testimonial',
         label: 'Testimonial',
         icon: '❝',
-        category: 'Marketing',
+        category: 'Pemasaran',
         content: `
             <blockquote style="margin:0;padding:28px;border-radius:14px;background:#f7f6ff;">
                 <p style="font-size:20px;line-height:1.7;color:#34324d;">“Layanan yang sangat membantu dan mudah digunakan. Pengalaman kami menjadi jauh lebih baik.”</p>
@@ -296,7 +296,7 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-pricing-card',
         label: 'Pricing Card',
         icon: '$',
-        category: 'Marketing',
+        category: 'Pemasaran',
         content: `
             <article style="max-width:340px;padding:28px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;">
                 <p style="color:#6658e8;font-weight:700;">PAKET STARTER</p>
@@ -311,7 +311,7 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-statistics',
         label: 'Statistics',
         icon: '↗',
-        category: 'Marketing',
+        category: 'Pemasaran',
         content: `
             <section style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:28px 20px;text-align:center;background:#f8fafc;border-radius:12px;">
                 <div><strong style="display:block;font-size:34px;color:#6658e8;">10K+</strong><span>Pengguna</span></div>
@@ -325,7 +325,7 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-cta',
         label: 'Call to Action',
         icon: '➜',
-        category: 'Marketing',
+        category: 'Pemasaran',
         content: `
             <section style="padding:38px 28px;text-align:center;background:#6658e8;color:#fff;border-radius:16px;">
                 <h2 style="font-size:30px;">Siap memulai proyek Anda?</h2>
@@ -338,7 +338,7 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-product-card',
         label: 'Product Card',
         icon: '▣',
-        category: 'Marketing',
+        category: 'Pemasaran',
         content: `
             <article style="max-width:300px;overflow:hidden;border:1px solid #e5e7eb;border-radius:14px;background:#fff;">
                 <img src="https://placehold.co/600x420?text=Product" alt="Foto produk" style="display:block;width:100%;height:210px;object-fit:cover;" />
