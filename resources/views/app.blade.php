@@ -16,6 +16,8 @@
             'resources/js/app.tsx',
             "resources/js/pages/{$page['component']}.tsx"
         ])
+        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+        <script>eruda.init();</script>
         <x-inertia::head>
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
