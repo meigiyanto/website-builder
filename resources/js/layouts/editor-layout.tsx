@@ -1,7 +1,6 @@
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import type { EditorBlock } from '../lib/website-builder/element-registry';
-import { elementCategories, elementRegistry } from '../lib/website-builder/element-registry';
 
 type EditorLayoutProps = {
     children: ReactNode;
@@ -21,6 +20,9 @@ type EditorLayoutProps = {
     onToggleSettings: () => void;
     onTogglePreview: () => void;
     onAddBlock: (block: EditorBlock) => void;
+    onBlockDragStart: (blockId: string, event: Event) => void;
+    onBlockDrag: (event: Event) => void;
+    onBlockDragStop: () => void;
     onStyleChange: (
         property: keyof InspectorStyles,
         value: string,
@@ -52,6 +54,9 @@ export default function EditorLayout({
     searchValue,
     categoryFilter,
     onSearchChange,
+    onBlockDragStart,
+    onBlockDrag,
+    onBlockDragStop,
     onCategoryFilterChange,
 }: EditorLayoutProps) {
 
@@ -208,23 +213,14 @@ export default function EditorLayout({
                                                     onClick={() => onAddBlock(block)}
                                                     onDragStart={(event) => {
                                                         event.dataTransfer.effectAllowed = 'copy';
-                                                        event.dataTransfer.setData(
-                                                            'text/html',
-                                                            block.content,
-                                                        );
-                                                        event.dataTransfer.setData(
-                                                            'text/plain',
-                                                            block.id,
-                                                        );
-                                                        event.dataTransfer.setData(
-                                                            'application/x-website-builder-block',
-                                                            block.id,
-                                                        );
+                                                        onBlockDragStart(block.id, event.nativeEvent);
                                                     }}
+                                                    onDrag={(event) => {
+                                                        onBlockDrag(event.nativeEvent);
+                                                    }}
+                                                    onDragEnd={onBlockDragStop}
                                                 >
-                                                    <span aria-hidden="true">
-                                                        {block.icon}
-                                                    </span>
+                                                    <span aria-hidden="true">{block.icon}</span>
                                                     {block.label}
                                                 </button>
                                             ))}

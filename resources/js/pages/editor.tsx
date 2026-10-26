@@ -17,6 +17,12 @@ const emptyStyles: InspectorStyles = {
     fontSize: '',
 };
 
+type BlockDragHandlers = {
+    start: (blockId: string, event: Event) => void;
+    drag: (event: Event) => void;
+    stop: () => void;
+};
+
 function getSelectedStyles(editor: Editor): InspectorStyles {
     const selected = editor.getSelected();
 
@@ -46,6 +52,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const [categoryFilter, setCategoryFilter] = useState('Semua');
     const [styles, setStyles] = useState<InspectorStyles>(emptyStyles);
 
+    const blockDragHandlersRef = useRef<BlockDragHandlers | null>(null);
     const editorRef = useRef<Editor | null>(null);
     const canvasRef = useRef<HTMLDivElement | null>(null);
     const syncSelection = useCallback((editor: Editor) => {
@@ -88,7 +95,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
             // Panel blok React ditampilkan di luar GrapesJS.
             blockManager: {
-                appendTo: undefined,
+                custom: true,
             },
 
             selectorManager: {
@@ -100,15 +107,32 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             },
         });
         
-        elementRegistry.forEach((block) => {
-            editor.BlockManager.add(block.id, {
-                label: `${block.icon} ${block.label}`,
-                category: block.category,
-                content: block.content,
-                attributes: {
-                    title: block.label,
+        editor.on('block:custom', ({ bm, dragStart, drag, dragStop }) => {
+            blockDragHandlersRef.current = {
+                start: (blockId, event) => {
+                    const block = bm.get(blockId);
+        
+                    if (block) {
+                        dragStart(block, event);
+                    }
                 },
-            });
+                drag,
+                stop: () => dragStop(),
+            };
+        });
+        
+        editor.on('block:custom', ({ bm, dragStart, drag, dragStop }) => {
+            blockDragHandlersRef.current = {
+                start: (blockId, event) => {
+                    const block = bm.get(blockId);
+        
+                    if (block) {
+                        dragStart(block, event);
+                    }
+                },
+                drag,
+                stop: () => dragStop(),
+            };
         });
 
         editor.setComponents(`
@@ -249,6 +273,28 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
         setPreview((current) => !current);
     };
+    
+    const handleBlockDragStart = (
+        blockId: string,
+        event: Event,
+    ) => {
+        const handlers = blockDragHandlersRef.current;
+    
+        if (!handlers) {
+            event.preventDefault();
+            return;
+        }
+    
+        handlers.start(blockId, event);
+    };
+    
+    const handleBlockDrag = (event: Event) => {
+        blockDragHandlersRef.current?.drag(event);
+    };
+    
+    const handleBlockDragStop = () => {
+        blockDragHandlersRef.current?.stop();
+    };
 
     return (
         <>
@@ -271,6 +317,9 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                 onToggleSettings={() => setSettingsOpen((current) => !current)}
                 onTogglePreview={togglePreview}
                 onAddBlock={addBlock}
+                onBlockDragStart={handleBlockDragStart}
+                onBlockDrag={handleBlockDrag}
+                onBlockDragStop={handleBlockDragStop}
                 onStyleChange={changeStyle}
             >
                 <div
