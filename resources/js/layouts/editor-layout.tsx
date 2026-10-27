@@ -623,12 +623,12 @@ export default function EditorLayout({
                                         
                                             <label className="editor-field">
                                                 <span>Text color</span>
-                                                <span className="editor-color-preview" style={{backgroundColor: normalizeColorForPreview(styles.color,'#24263a') }}/>
+                                                
                                                 <div className="editor-color-control">
                                                    <input
                                                         type="color"
                                                         aria-label="Pilih warna teks"
-                                                        value={/^#[0-9a-fA-F]{6}$/.test(styles.color) ? styles.color : '#24263a'}
+                                                        value={normalizeColorForPreview(styles.color, '#24263a')}
                                                         onChange={(event) => onStyleChange('color', event.target.value)}
                                                     />
                                         
@@ -636,21 +636,19 @@ export default function EditorLayout({
                                                         type="text"
                                                         value={styles.color}
                                                         placeholder="#24263a"
-                                                        onChange={(event) =>
-                                                            onStyleChange('color', event.target.value)
-                                                        }
+                                                        onChange={(event) => onStyleChange('color', event.target.value)}
                                                     />
                                                 </div>
                                             </label>
                                         
                                             <label className="editor-field">
                                                 <span>Background color</span>
-                                                <span className="editor-color-preview" style={{backgroundColor: normalizeColorForPreview(styles.backgroundColor, '#ffffff') }}/>
+                                                
                                                 <div className="editor-color-control">
                                                     <input
                                                         type="color"
                                                         aria-label="Pilih warna latar"
-                                                        value={/^#[0-9a-fA-F]{6}$/.test(styles.backgroundColor) ? styles.backgroundColor : '#ffffff'}
+                                                        value={normalizeColorForPreview(styles.backgroundColor, '#ffffff')}
                                                         onChange={(event) => onStyleChange('backgroundColor', event.target.value )}
                                                     />
                                         
