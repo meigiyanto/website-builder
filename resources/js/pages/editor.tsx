@@ -149,8 +149,8 @@ function createLayoutMarkup(columns: 1 | 2 | 3 | 4): string {
         { length: columns },
         (_, index) => `
             <div class="wb-layout-column">
-                <h3>Kolom ${index + 1}</h3>
-                <p>Tambahkan konten di sini.</p>
+                <h3>Column ${index + 1}</h3>
+                <p>Add content here.</p>
             </div>
         `,
     ).join('');
@@ -308,14 +308,11 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
         editor.setComponents(`
             <section class="wb-hero">
-                <p class="wb-eyebrow">SELAMAT DATANG</p>
-                <h1>Bangun sesuatu yang hebat.</h1>
-                <p>
-                    Ini adalah halaman awal Anda. Pilih blok dari panel kiri
-                    untuk mulai menyusun website.
-                </p>
+                <p class="wb-eyebrow">WELCOME</p>
+                <h1>Build that something awesome.</h1>
+                <p>It is front page. Select block from left panel to start arrange website</p>
                 <a class="wb-hero__button" href="#">
-                    Mulai sekarang
+                    Start now
                 </a>
             </section>
         `);
@@ -519,7 +516,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         };    
         
         // Shortcut GrapesJS bawaan diganti dengan handler yang
-        // melindungi input dan area pengeditan teks.
+        // melindungi input dan area pengeditan Text.
         editor.Keymaps.remove('core:undo');
         editor.Keymaps.remove('core:redo');
         
@@ -783,8 +780,8 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             { length: columns },
             (_, index) => `
                 <div class="wb-layout-column">
-                    <h3>Kolom ${index + 1}</h3>
-                    <p>Tambahkan konten di sini.</p>
+                    <h3>Column ${index + 1}</h3>
+                    <p>Add content here.</p>
                 </div>
             `,
         ).join('');

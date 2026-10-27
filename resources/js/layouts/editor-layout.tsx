@@ -790,11 +790,10 @@ export default function EditorLayout({
                                     <div className="editor-inspector-empty">
                                         <span aria-hidden="true">◇</span>
                                         <strong>
-                                            Belum ada elemen dipilih
+                                            No element choosen yet
                                         </strong>
                                         <p>
-                                            Pilih elemen di kanvas untuk
-                                            mengatur tampilannya.
+                                            Select element on canvas for setting the layout
                                         </p>
                                     </div>
                                 ) : (
@@ -806,7 +805,7 @@ export default function EditorLayout({
                                     
                                         {styles.canEditContent && (
                                             <section className="editor-inspector-section">
-                                                <p className="editor-inspector-section__title">Konten</p>
+                                                <p className="editor-inspector-section__title">Content</p>
                                     
                                                 <label className="editor-field">
                                                     <span>Text</span>
@@ -825,7 +824,7 @@ export default function EditorLayout({
                                                         <input
                                                             type="text"
                                                             value={styles.href}
-                                                            placeholder="https://contoh.com"
+                                                            placeholder="https://example.com"
                                                             onChange={(event) =>
                                                                 onStyleChange('href', event.target.value)
                                                             }
@@ -869,8 +868,8 @@ export default function EditorLayout({
                                                             <option value="">Default</option>
                                                             <option value="row">Horizontal</option>
                                                             <option value="column">Vertikal</option>
-                                                            <option value="row-reverse">Horizontal terbalik</option>
-                                                            <option value="column-reverse">Vertikal terbalik</option>
+                                                            <option value="row-reverse">Horizontal backward</option>
+                                                            <option value="column-reverse">Vertikal backward</option>
                                                         </select>
                                                     </label>
                                     
@@ -919,7 +918,7 @@ export default function EditorLayout({
                                                     <input
                                                         type="text"
                                                         value={styles[property as keyof InspectorStyles] as string}
-                                                        placeholder="Contoh: 100% atau 16px"
+                                                        placeholder="e.g.: 100% or 16px"
                                                         onChange={(event) => onStyleChange(property as InspectorProperty,event.target.value)}
                                                     />
                                                 </label>
@@ -927,7 +926,7 @@ export default function EditorLayout({
                                         </section>
                                     
                                         <section className="editor-inspector-section">
-                                            <p className="editor-inspector-section__title">Typograhy</p>
+                                            <p className="editor-inspector-section__title">Typography</p>
                                     
                                             <label className="editor-field">
                                                 <span>Font family</span>
@@ -998,10 +997,10 @@ export default function EditorLayout({
                                                     }
                                                 >
                                                     <option value="">Default</option>
-                                                    <option value="left">Kiri</option>
-                                                    <option value="center">Tengah</option>
-                                                    <option value="right">Kanan</option>
-                                                    <option value="justify">Rata kiri-kanan</option>
+                                                    <option value="left">Left</option>
+                                                    <option value="center">Center</option>
+                                                    <option value="right">Right</option>
+                                                    <option value="justify">Justify</option>
                                                 </select>
                                             </label>
                                         </section>
@@ -1045,7 +1044,7 @@ export default function EditorLayout({
                                                     <input
                                                         type="text"
                                                         value={styles[property as keyof InspectorStyles] as string}
-                                                        placeholder="Contoh: 16px"
+                                                        placeholder="e.g.: 16px"
                                                         onChange={(event) => onStyleChange( property as InspectorProperty, event.target.value, )}
                                                     />
                                                 </label>
