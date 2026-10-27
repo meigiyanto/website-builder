@@ -67,7 +67,6 @@ function getNavigatorItems(editor: Editor): NavigatorItem[] {
     return items;
 }
 
-
 type BlockDragHandlers = {
     start: (blockId: string, event: Event) => void;
     drag: (event: Event) => void;
@@ -173,6 +172,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     
     const [navigatorItems, setNavigatorItems] = useState<NavigatorItem[]>([]);
     const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
+    const [navigatorOpen, setNavigatorOpen] = useState(true);
     
     const [selectedElement, setSelectedElement] = useState<string | null>(null);
     const [searchValue, setSearchValue] = useState('');
@@ -182,6 +182,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const blockDragHandlersRef = useRef<BlockDragHandlers | null>(null);
     const editorRef = useRef<Editor | null>(null);
     const canvasRef = useRef<HTMLDivElement | null>(null);
+    
     const syncSelection = useCallback((editor: Editor) => {
         const selected = editor.getSelected();
 
@@ -245,8 +246,8 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         
         ([1, 2, 3, 4] as const).forEach((columns) => {
             editor.BlockManager.add(`wb-layout-${columns}`, {
-                label: `Layout ${columns} kolom`,
-                category: 'Layout cepat',
+                label: `Layout ${columns} column`,
+                category: 'Quick Layout',
                 content: createLayoutMarkup(columns),
             });
         });
@@ -793,6 +794,10 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                 selectedComponentId={selectedComponentId}
                 onSelectNavigatorItem={selectNavigatorItem}
                 onMoveNavigatorItem={moveNavigatorItem}
+                navigatorOpen={navigatorOpen}
+                onToggleNavigator={() => {
+                    setNavigatorOpen((open) => !open);
+                }}
                 onAddLayoutPreset={addLayoutPreset}
             >
                 <div

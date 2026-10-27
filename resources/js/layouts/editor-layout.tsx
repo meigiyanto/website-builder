@@ -24,10 +24,7 @@ type EditorLayoutProps = {
     onBlockDragStart: (blockId: string, event: Event) => void;
     onBlockDrag: (event: Event) => void;
     onBlockDragStop: () => void;
-    onStyleChange: (
-        property: InspectorProperty,
-        value: string,
-    ) => void;
+    onStyleChange: ( property: InspectorProperty, value: string) => void;
     canUndo: boolean;
     canRedo: boolean;
     onUndo: () => void;
@@ -35,10 +32,9 @@ type EditorLayoutProps = {
     navigatorItems: NavigatorItem[];
     selectedComponentId: string | null;
     onSelectNavigatorItem: (component: Component) => void;
-    onMoveNavigatorItem: (
-        component: Component,
-        direction: -1 | 1,
-    ) => void;
+    onMoveNavigatorItem: (component: Component, direction: -1 | 1) => void;
+    navigatorOpen: boolean;
+    onToggleNavigator: () => void;
     onAddLayoutPreset: (columns: 1 | 2 | 3 | 4) => void;
 };
 
@@ -167,14 +163,14 @@ export default function EditorLayout({
     onSelectNavigatorItem, 
     onMoveNavigatorItem,
     onAddLayoutPreset,
+    navigatorOpen,
+    onToggleNavigator,
 }: EditorLayoutProps) {
 
     const query = searchValue.trim().toLocaleLowerCase();
 
     const filteredBlocks = blocks.filter((block) => {
-        const matchesCategory =
-            categoryFilter === 'Semua' ||
-            block.category === categoryFilter;
+        const matchesCategory = categoryFilter === 'Semua' || block.category === categoryFilter;
     
         const searchable = [
             block.label,
@@ -292,74 +288,92 @@ export default function EditorLayout({
                             <div className="editor-panel__content">
                                 
                                 <section className="editor-navigator">
-                                    <p className="editor-panel__description">NAVIGATOR</p>
-                                
-                                    {navigatorItems?.length === 0 ? (
-                                        <p className="editor-navigator__empty">
-                                            Halaman belum memiliki elemen.
-                                        </p>
-                                    ) : (
-                                        <div className="editor-navigator__list">
-                                            {navigatorItems?.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className={`editor-navigator__row${
-                                                        item.id === selectedComponentId
-                                                            ? ' is-selected'
-                                                            : ''
-                                                    }`}
-                                                    style={{
-                                                        paddingLeft: `${8 + item.depth * 12}px`,
-                                                    }}
-                                                >
-                                                    <button
-                                                        type="button"
-                                                        className="editor-navigator__select"
-                                                        onClick={() =>
-                                                            onSelectNavigatorItem(item.component)
-                                                        }
-                                                        title={`Pilih <${item.tagName}>`}
-                                                    >
-                                                        <span aria-hidden="true">
-                                                            {item.depth > 0 ? '↳' : '◇'}
-                                                        </span>
-                                                        <span className="editor-navigator__label">
-                                                            {item.label}
-                                                        </span>
-                                                    </button>
-                                
-                                                    <div className="editor-navigator__actions">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                onMoveNavigatorItem(item.component, -1)
-                                                            }
-                                                            disabled={!item.canMoveUp}
-                                                            aria-label={`Naikkan ${item.label}`}
-                                                            title="Pindah ke atas"
+                                    <div className="editor-navigator__header">
+                                        <p className="editor-panel__description">NAVIGATOR</p>
+                                    
+                                        <button
+                                            type="button"
+                                            className="editor-navigator__toggle"
+                                            onClick={onToggleNavigator}
+                                            aria-expanded={navigatorOpen}
+                                            aria-controls="editor-navigator-content"
+                                            title={navigatorOpen ? 'Tutup Navigator' : 'Buka Navigator'}
+                                        >
+                                            <span aria-hidden="true">
+                                                {navigatorOpen ? '−' : '+'}
+                                            </span>
+                                            <span>{navigatorOpen ? 'Hide' : 'Show'}</span>
+                                        </button>
+                                    </div>
+                                    
+                                    {navigatorOpen && (
+                                        <div id="editor-navigator-content">
+                                            {navigatorItems?.length === 0 ? (
+                                                <p className="editor-navigator__empty">Halaman belum memiliki elemen.</p>
+                                            ) : (
+                                                <div className="editor-navigator__list">
+                                                    {navigatorItems?.map((item) => (
+                                                        <div
+                                                            key={item.id}
+                                                            className={`editor-navigator__row${
+                                                                item.id === selectedComponentId
+                                                                    ? ' is-selected'
+                                                                    : ''
+                                                            }`}
+                                                            style={{
+                                                                paddingLeft: `${8 + item.depth * 12}px`,
+                                                            }}
                                                         >
-                                                            ↑
-                                                        </button>
-                                
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                onMoveNavigatorItem(item.component, 1)
-                                                            }
-                                                            disabled={!item.canMoveDown}
-                                                            aria-label={`Turunkan ${item.label}`}
-                                                            title="Pindah ke bawah"
-                                                        >
-                                                            ↓
-                                                        </button>
-                                                    </div>
+                                                            <button
+                                                                type="button"
+                                                                className="editor-navigator__select"
+                                                                onClick={() =>
+                                                                    onSelectNavigatorItem(item.component)
+                                                                }
+                                                                title={`Pilih <${item.tagName}>`}
+                                                            >
+                                                                <span aria-hidden="true">
+                                                                    {item.depth > 0 ? '↳' : '◇'}
+                                                                </span>
+                                                                <span className="editor-navigator__label">
+                                                                    {item.label}
+                                                                </span>
+                                                            </button>
+                                        
+                                                            <div className="editor-navigator__actions">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        onMoveNavigatorItem(item.component, -1)
+                                                                    }
+                                                                    disabled={!item.canMoveUp}
+                                                                    aria-label={`Naikkan ${item.label}`}
+                                                                    title="Pindah ke atas"
+                                                                >
+                                                                    ↑
+                                                                </button>
+                                        
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        onMoveNavigatorItem(item.component, 1)
+                                                                    }
+                                                                    disabled={!item.canMoveDown}
+                                                                    aria-label={`Turunkan ${item.label}`}
+                                                                    title="Pindah ke bawah"
+                                                                >
+                                                                    ↓
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     )}
                                 </section>
 
-                                <p className="editor-panel__description">KATALOG ELEMENT</p>
+                                <p className="editor-panel__description">CATALOG ELEMENT</p>
                                 
                                 <label className="editor-catalog-search">
                                     <span className="sr-only">Cari elemen</span>
@@ -390,7 +404,7 @@ export default function EditorLayout({
                                 </label>
 
                                 <section className="editor-layout-presets">
-                                    <p className="editor-panel__description">LAYOUT CEPAT</p>
+                                    <p className="editor-panel__description">QUICK LAYOUT</p>
                                 
                                     <div className="editor-layout-presets__grid">
                                         {([1, 2, 3, 4] as const).map((columns) => (
@@ -496,7 +510,7 @@ export default function EditorLayout({
                         }`}
                     >
                         <div className="editor-panel__heading">
-                            {settingsOpen && <strong>Pengaturan</strong>}
+                            {settingsOpen && <strong>Settings</strong>}
 
                             <button
                                 type="button"
@@ -516,7 +530,7 @@ export default function EditorLayout({
                         {settingsOpen && (
                             <div className="editor-panel__content">
                                 <p className="editor-panel__description">
-                                    GAYA ELEMEN
+                                    ELEMENT STYLE
                                 </p>
 
                                 {!selectedElement ? (

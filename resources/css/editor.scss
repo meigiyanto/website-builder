@@ -717,3 +717,33 @@ body,
     font-size: 10px;
     line-height: 1.6;
 }
+
+.editor-navigator__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.editor-navigator__header .editor-panel__description {
+    margin-bottom: 0;
+}
+
+.editor-navigator__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 7px;
+    border: 1px solid var(--editor-border);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--editor-text);
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.editor-navigator__toggle:hover {
+    border-color: #bcb5ff;
+    background: #f9f8ff;
+}
