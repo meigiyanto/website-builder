@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import type { ReactNode } from 'react';
+import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
 
@@ -122,12 +122,7 @@ function normalizeColorForPreview(color: string, fallback: string): string {
         const channels = rgbMatch.slice(1, 4).map(Number);
 
         if (channels.every((channel) => channel >= 0 && channel <= 255)) {
-            return (
-                '#' +
-                channels
-                    .map((channel) => channel.toString(16).padStart(2, '0'))
-                    .join('')
-            );
+            return ('#' + channels.map((channel) => channel.toString(16).padStart(2, '0')).join(''));
         }
     }
 
@@ -135,6 +130,22 @@ function normalizeColorForPreview(color: string, fallback: string): string {
     // gunakan fallback agar pratinjau tetap valid.
     return fallback;
 }
+
+type FloatingPanel = 'blocks' | 'settings';
+
+type FloatingPanelPosition = {
+    x: number;
+    y: number;
+};
+
+type PanelDragState = {
+    panel: FloatingPanel;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+};
 
 export default function EditorLayout({
     children,
@@ -170,8 +181,77 @@ export default function EditorLayout({
     navigatorOpen,
     onToggleNavigator,
     collapsedNavigatorIds,
+    onToggleNavigatorItem,
 }: EditorLayoutProps) {
 
+    const [activeMobilePanel, setActiveMobilePanel] = useState<FloatingPanel | null>(null);
+
+    const [panelPositions, setPanelPositions] = useState<Record<FloatingPanel, FloatingPanelPosition>>({
+        blocks: { x: 8, y: 72 },
+        settings: { x: 8, y: 72 },
+    });
+    
+    const panelDragRef = useRef<PanelDragState | null>(null);
+    
+    const startPanelDrag = (panel: FloatingPanel, event: ReactPointerEvent<HTMLDivElement>) => {
+        if (!window.matchMedia('(max-width: 650px)').matches) return;
+    
+        if ((event.target as HTMLElement).closest('button, input, select, textarea, a')) {
+            return;
+        }
+    
+        panelDragRef.current = {
+            panel,
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            originX: panelPositions[panel].x,
+            originY: panelPositions[panel].y,
+        };
+    
+        event.currentTarget.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    };
+    
+    const movePanelDrag = (panel: FloatingPanel, event: ReactPointerEvent<HTMLDivElement>) => {
+        const drag = panelDragRef.current;
+    
+        if (!drag || drag.panel !== panel || drag.pointerId !== event.pointerId) {
+            return;
+        }
+    
+        const panelElement = event.currentTarget.closest('.editor-panel');
+        const rect = panelElement?.getBoundingClientRect();
+        const maxX = Math.max(0,window.innerWidth - (rect?.width ?? 300));
+        const maxY = Math.max(8,window.innerHeight - (rect?.height ?? 300));
+        const x = Math.min(Math.max(0, drag.originX + event.clientX - drag.startX), maxX);
+        const y = Math.min(Math.max(8, drag.originY + event.clientY - drag.startY), maxY);
+    
+        setPanelPositions((current) => ({
+            ...current, [panel]: { x, y }
+        }));
+    };
+    
+    const stopPanelDrag = (panel: FloatingPanel, event: ReactPointerEvent<HTMLDivElement>) => {
+        if (panelDragRef.current?.panel === panel &&panelDragRef.current.pointerId === event.pointerId) {
+            panelDragRef.current = null;
+        }
+    };
+    
+    const openMobilePanel = (panel: FloatingPanel) => {
+        setActiveMobilePanel((current) =>
+            current === panel ? null : panel,
+        );
+    
+        if (panel === 'blocks' && !blocksOpen) {
+            onToggleBlocks();
+        }
+    
+        if (panel === 'settings' && !settingsOpen) {
+            onToggleSettings();
+        }
+    };
+    
     const query = searchValue.trim().toLocaleLowerCase();
 
     const filteredBlocks = blocks.filter((block) => {
@@ -182,13 +262,10 @@ export default function EditorLayout({
             block.category,
             block.id,
         ]
-            .join(' ')
-            .toLocaleLowerCase();
+        .join(' ')
+        .toLocaleLowerCase();
     
-        return (
-            matchesCategory &&
-            (!query || searchable.includes(query))
-        );
+        return (matchesCategory && (!query || searchable.includes(query)));
     });
     
     const groupedBlocks = categories
@@ -283,26 +360,49 @@ export default function EditorLayout({
                 </div>
             </header>
 
+            {!preview && (
+                <nav
+                    className="editor-mobile-dock"
+                    aria-label="Panel editor"
+                >
+                    <button
+                        type="button"
+                        className={activeMobilePanel === 'blocks' ? 'is-active' : ''}
+                        onClick={() => openMobilePanel('blocks')}
+                        aria-expanded={activeMobilePanel === 'blocks'}
+                    >
+                        Element
+                    </button>
+            
+                    <button
+                        type="button"
+                        className={activeMobilePanel === 'settings' ? 'is-active' : ''}
+                        onClick={() => openMobilePanel('settings')}
+                        aria-expanded={activeMobilePanel === 'settings'}
+                    >
+                        Inspector
+                    </button>
+                </nav>
+            )}
+
             <div className="editor-workspace">
                 {!preview && (
-                    <aside
-                        className={`editor-panel editor-panel--blocks${
-                            blocksOpen ? '' : ' is-collapsed'
-                        }`}
-                    >
-                        <div className="editor-panel__heading">
-                            {blocksOpen && <strong>Elemen</strong>}
+                    <aside className={`editor-panel editor-panel--blocks ${blocksOpen ? '' : 'is-collapsed'} ${activeMobilePanel === 'blocks' ? ' is-mobile-active' : '' }`} style={{left: panelPositions.blocks.x, top: panelPositions.blocks.y}}>                
+                        <div
+                            className="editor-panel__heading editor-panel__heading--draggable"
+                            onPointerDown={(event) => startPanelDrag('blocks', event)}
+                            onPointerMove={(event) => movePanelDrag('blocks', event)}
+                            onPointerUp={(event) => stopPanelDrag('blocks', event)}
+                            onPointerCancel={(event) => stopPanelDrag('blocks', event)}
+                        >
+                            {blocksOpen && <strong>Element</strong>}
 
                             <button
                                 type="button"
                                 className="editor-icon-button"
                                 onClick={onToggleBlocks}
-                                aria-label={
-                                    blocksOpen ? 'Ciutkan panel elemen' : 'Buka panel elemen'
-                                }
-                                title={
-                                    blocksOpen ? 'Ciutkan panel elemen' : 'Buka panel elemen'
-                                }
+                                aria-label={blocksOpen ? 'Ciutkan panel elemen' : 'Buka panel elemen'}
+                                title={blocksOpen ? 'Ciutkan panel elemen' : 'Buka panel elemen'}
                             >
                                 {blocksOpen ? '«' : '»'}
                             </button>
@@ -533,12 +633,14 @@ export default function EditorLayout({
                 </main>
 
                 {!preview && (
-                    <aside
-                        className={`editor-panel editor-panel--settings${
-                            settingsOpen ? '' : ' is-collapsed'
-                        }`}
-                    >
-                        <div className="editor-panel__heading">
+                    <aside className={`editor-panel editor-panel--settings ${settingsOpen ? '' : ' is-collapsed'} ${activeMobilePanel === 'settings' ? ' is-mobile-active' : ''}`} style={{left: panelPositions.settings.x, top: panelPositions.settings.y}}>
+                        <div
+                            className="editor-panel__heading editor-panel__heading--draggable"
+                            onPointerDown={(event) => startPanelDrag('settings', event)}
+                            onPointerMove={(event) => movePanelDrag('settings', event)}
+                            onPointerUp={(event) => stopPanelDrag('settings', event)}
+                            onPointerCancel={(event) => stopPanelDrag('settings', event)}
+                        >
                             {settingsOpen && <strong>Settings</strong>}
 
                             <button

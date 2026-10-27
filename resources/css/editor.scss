@@ -777,3 +777,103 @@ body,
     background: #f0eeff;
     box-shadow: inset 2px 0 0 var(--editor-primary);
 }
+
+/* Floating panels untuk layar mobile */
+.editor-mobile-dock {
+    display: none;
+}
+
+.editor-panel__heading--draggable {
+    touch-action: none;
+}
+
+@media (max-width: 650px) {
+    .editor-mobile-dock {
+        position: fixed;
+        z-index: 1000;
+        right: 12px;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        left: 12px;
+
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+
+        padding: 8px;
+        border: 1px solid var(--editor-border);
+        border-radius: 14px;
+        background: rgb(255 255 255 / 96%);
+        box-shadow: 0 6px 24px rgb(0 0 0 / 14%);
+    }
+
+    .editor-mobile-dock button {
+        min-height: 40px;
+        flex: 1;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--editor-text);
+        font-size: 12px;
+        font-weight: 700;
+        touch-action: manipulation;
+    }
+
+    .editor-mobile-dock button.is-active {
+        background: #f0eeff;
+        color: #5142d6;
+    }
+
+    .editor-workspace {
+        position: relative;
+        overflow: visible;
+    }
+
+    .editor-panel,
+    .editor-panel--settings {
+        position: fixed;
+        z-index: 999;
+
+        display: none;
+        box-sizing: border-box;
+        width: min(320px, calc(100vw - 16px));
+        height: min(72vh, 560px);
+        max-height: calc(100dvh - 100px);
+
+        border: 1px solid var(--editor-border);
+        border-radius: 12px;
+        background: var(--editor-surface);
+        box-shadow: 0 10px 32px rgb(0 0 0 / 20%);
+    }
+
+    .editor-panel.is-mobile-active {
+        display: flex;
+    }
+
+    .editor-panel.is-collapsed {
+        width: min(320px, calc(100vw - 16px));
+    }
+
+    .editor-panel__heading--draggable {
+        min-height: 48px;
+        flex: 0 0 auto;
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .editor-panel__heading--draggable:active {
+        cursor: grabbing;
+    }
+
+    .editor-panel__content {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 12px;
+    }
+
+    .editor-panel--blocks .editor-block-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
