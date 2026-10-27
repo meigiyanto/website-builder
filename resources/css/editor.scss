@@ -747,3 +747,33 @@ body,
     border-color: #bcb5ff;
     background: #f9f8ff;
 }
+
+.editor-navigator__collapse,
+.editor-navigator__collapse-placeholder {
+    display: inline-flex;
+    width: 18px;
+    height: 24px;
+    flex: 0 0 18px;
+    align-items: center;
+    justify-content: center;
+}
+
+.editor-navigator__collapse {
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    color: var(--editor-muted);
+    background: transparent;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.editor-navigator__collapse:hover {
+    color: var(--editor-primary);
+    background: #f0eeff;
+}
+
+.editor-navigator__row.is-selected {
+    background: #f0eeff;
+    box-shadow: inset 2px 0 0 var(--editor-primary);
+}

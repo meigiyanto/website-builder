@@ -37,23 +37,27 @@ const emptyStyles: InspectorStyles = {
 
 function getNavigatorItems(editor: Editor): NavigatorItem[] {
     const items: NavigatorItem[] = [];
-
+    
     const visit = (parent: Component, depth: number) => {
         const children = parent.components().models;
-
+    
         children.forEach((component, index) => {
-            const tagName = String(component.get('tagName') || 'div').toLowerCase();
-
+            const tagName = String(
+                component.get('tagName') || 'div',
+            ).toLowerCase();
+    
             items.push({
                 id: component.getId(),
+                parentId: parent.getId(),
                 label: component.getName() || tagName,
                 tagName,
                 depth,
+                hasChildren: component.components().length > 0,
                 component,
                 canMoveUp: index > 0,
                 canMoveDown: index < children.length - 1,
             });
-
+    
             visit(component, depth + 1);
         });
     };
@@ -173,29 +177,52 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const [navigatorItems, setNavigatorItems] = useState<NavigatorItem[]>([]);
     const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
     const [navigatorOpen, setNavigatorOpen] = useState(true);
+    const [collapsedNavigatorIds, setCollapsedNavigatorIds] = useState<Set<string>>(() => new Set());
     
     const [selectedElement, setSelectedElement] = useState<string | null>(null);
     const [searchValue, setSearchValue] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('Semua');
     const [styles, setStyles] = useState<InspectorStyles>(emptyStyles);
 
     const blockDragHandlersRef = useRef<BlockDragHandlers | null>(null);
     const editorRef = useRef<Editor | null>(null);
     const canvasRef = useRef<HTMLDivElement | null>(null);
     
+    const [categoryFilter, setCategoryFilter] = useState('All');
+    
     const syncSelection = useCallback((editor: Editor) => {
         const selected = editor.getSelected();
-
+    
         if (!selected) {
+            setSelectedComponentId(null);
             setSelectedElement(null);
             setStyles(emptyStyles);
             return;
         }
-
-        const tagName = String(
-            selected.get('tagName') || 'element',
-        ).toLowerCase();
-
+    
+        setSelectedComponentId(selected.getId());
+    
+        // Buka semua ancestor agar elemen terpilih terlihat.
+        const wrapper = editor.getWrapper();
+        const ancestorIds: string[] = [];
+        let parent = selected.parent();
+    
+        while (parent && parent !== wrapper) {
+            ancestorIds.push(parent.getId());
+            parent = parent.parent();
+        }
+    
+        if (ancestorIds.length > 0) {
+            setCollapsedNavigatorIds((current) => {
+                const next = new Set(current);
+    
+                ancestorIds.forEach((id) => next.delete(id));
+    
+                return next;
+            });
+        }
+    
+        const tagName = String(selected.get('tagName') || 'element').toLowerCase();
+    
         setSelectedElement(`<${tagName}>`);
         setStyles(getSelectedStyles(editor));
     }, []);
@@ -437,15 +464,6 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             const target = event.target as HTMLElement | null;
             const tagName = target?.tagName?.toLowerCase();
         
-            // Perbarui status tombol ketika struktur atau gaya berubah.
-            editor.on('component:add', refreshHistory);
-            editor.on('component:remove', refreshHistory);
-            editor.on('component:update', refreshHistory);
-            editor.on('component:styleUpdate', refreshHistory);
-            editor.on('styleable:change', refreshHistory);
-            editor.on('undo', refreshHistory);
-            editor.on('redo', refreshHistory);
-        
             // Jangan mengambil alih shortcut ketika pengguna sedang mengetik.
             if (
                 tagName === 'input' ||
@@ -537,6 +555,13 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             editor.off('component:add', refreshNavigator);
             editor.off('component:remove', refreshNavigator);
             editor.off('component:drag:end', refreshNavigator);
+            editor.off('component:add', refreshHistory);
+            editor.off('component:remove', refreshHistory);
+            editor.off('component:update', refreshHistory);
+            editor.off('component:styleUpdate', refreshHistory);
+            editor.off('styleable:change', refreshHistory);
+            editor.off('undo', refreshHistory);
+            editor.off('redo', refreshHistory);
             editor.destroy();
             editorRef.current = null;
         };
@@ -701,6 +726,20 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         syncHistory(editor);
     };
     
+    const toggleNavigatorItem = (id: string) => {
+        setCollapsedNavigatorIds((current) => {
+            const next = new Set(current);
+    
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+    
+            return next;
+        });
+    };
+    
     const addLayoutPreset = (columns: 1 | 2 | 3 | 4) => {
         const editor = editorRef.current;
     
@@ -795,6 +834,8 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                 onSelectNavigatorItem={selectNavigatorItem}
                 onMoveNavigatorItem={moveNavigatorItem}
                 navigatorOpen={navigatorOpen}
+                collapsedNavigatorIds={collapsedNavigatorIds}
+                onToggleNavigatorItem={toggleNavigatorItem}
                 onToggleNavigator={() => {
                     setNavigatorOpen((open) => !open);
                 }}

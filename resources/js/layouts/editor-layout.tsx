@@ -35,6 +35,8 @@ type EditorLayoutProps = {
     onMoveNavigatorItem: (component: Component, direction: -1 | 1) => void;
     navigatorOpen: boolean;
     onToggleNavigator: () => void;
+    collapsedNavigatorIds: ReadonlySet<string>;
+    onToggleNavigatorItem: (id: string) => void;
     onAddLayoutPreset: (columns: 1 | 2 | 3 | 4) => void;
 };
 
@@ -66,6 +68,8 @@ export type InspectorStyles = {
 export type NavigatorItem = {
     id: string;
     label: string;
+    parentId: string;
+    hasChildren: boolean;
     tagName: string;
     depth: number;
     component: Component;
@@ -165,12 +169,13 @@ export default function EditorLayout({
     onAddLayoutPreset,
     navigatorOpen,
     onToggleNavigator,
+    collapsedNavigatorIds,
 }: EditorLayoutProps) {
 
     const query = searchValue.trim().toLocaleLowerCase();
 
     const filteredBlocks = blocks.filter((block) => {
-        const matchesCategory = categoryFilter === 'Semua' || block.category === categoryFilter;
+        const matchesCategory = categoryFilter === 'All' || block.category === categoryFilter;
     
         const searchable = [
             block.label,
@@ -187,7 +192,7 @@ export default function EditorLayout({
     });
     
     const groupedBlocks = categories
-        .filter((category) => category !== 'Semua')
+        .filter((category) => category !== 'All')
         .map((category) => ({
             category,
             items: filteredBlocks.filter(
@@ -195,6 +200,25 @@ export default function EditorLayout({
             ),
         }))
         .filter((group) => group.items.length > 0);
+        
+    const navigatorItemById = new Map(
+        navigatorItems.map((item) => [item.id, item]),
+    );
+    
+    const visibleNavigatorItems = navigatorItems.filter((item) => {
+        let parentId: string | undefined = item.parentId;
+    
+        while (parentId) {
+            if (collapsedNavigatorIds.has(parentId)) {
+                return false;
+            }
+    
+            const parent = navigatorItemById.get(parentId);
+            parentId = parent?.parentId;
+        }
+    
+        return true;
+    });
 
     return (
         <div className={`editor-shell${preview ? ' is-preview' : ''}`}>
@@ -312,24 +336,33 @@ export default function EditorLayout({
                                                 <p className="editor-navigator__empty">Halaman belum memiliki elemen.</p>
                                             ) : (
                                                 <div className="editor-navigator__list">
-                                                    {navigatorItems?.map((item) => (
+                                                    {visibleNavigatorItems?.map((item) => (
                                                         <div
                                                             key={item.id}
-                                                            className={`editor-navigator__row${
-                                                                item.id === selectedComponentId
-                                                                    ? ' is-selected'
-                                                                    : ''
-                                                            }`}
+                                                            className={`editor-navigator__row${item.id === selectedComponentId ? ' is-selected' : ''}`}
                                                             style={{
                                                                 paddingLeft: `${8 + item.depth * 12}px`,
                                                             }}
                                                         >
+                                                            {item.hasChildren ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className="editor-navigator__collapse"
+                                                                    onClick={() => onToggleNavigatorItem(item.id)}
+                                                                    aria-label={collapsedNavigatorIds.has(item.id) ? `Buka anak ${item.label}` : `Tutup anak ${item.label}`}
+                                                                    aria-expanded={!collapsedNavigatorIds.has(item.id)}
+                                                                    title={collapsedNavigatorIds.has(item.id) ? 'Tampilkan anak' : 'Sembunyikan anak'}
+                                                                >
+                                                                    {collapsedNavigatorIds.has(item.id) ? '▸' : '▾'}
+                                                                </button>
+                                                            ) : (
+                                                                <span className="editor-navigator__collapse-placeholder" />
+                                                            )}
+                                                            
                                                             <button
                                                                 type="button"
                                                                 className="editor-navigator__select"
-                                                                onClick={() =>
-                                                                    onSelectNavigatorItem(item.component)
-                                                                }
+                                                                onClick={() =>onSelectNavigatorItem(item.component)}
                                                                 title={`Pilih <${item.tagName}>`}
                                                             >
                                                                 <span aria-hidden="true">
@@ -343,9 +376,7 @@ export default function EditorLayout({
                                                             <div className="editor-navigator__actions">
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() =>
-                                                                        onMoveNavigatorItem(item.component, -1)
-                                                                    }
+                                                                    onClick={() =>onMoveNavigatorItem(item.component, -1)}
                                                                     disabled={!item.canMoveUp}
                                                                     aria-label={`Naikkan ${item.label}`}
                                                                     title="Pindah ke atas"
@@ -355,9 +386,7 @@ export default function EditorLayout({
                                         
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() =>
-                                                                        onMoveNavigatorItem(item.component, 1)
-                                                                    }
+                                                                    onClick={() =>onMoveNavigatorItem(item.component, 1)}
                                                                     disabled={!item.canMoveDown}
                                                                     aria-label={`Turunkan ${item.label}`}
                                                                     title="Pindah ke bawah"
