@@ -636,9 +636,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             return;
         }
     
-        selected.addStyle({ [cssProperty]: value });
         inspectorStyleChangeRef.current = true;
-
         try {
             selected.addStyle({ [cssProperty]: value });
         } finally {
@@ -730,10 +728,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     
         // GrapesJS menyesuaikan indeks ketika komponen
         // dipindahkan dalam parent yang sama.
-        const at =
-            direction === -1
-                ? nextIndex
-                : nextIndex + 1;
+        const at = direction === -1 ? nextIndex : nextIndex + 1;
     
         component.move(parent, { at });
     

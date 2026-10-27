@@ -1,32 +1,39 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
+// import type { LucideIcon } from 'lucide-react';
+// import { Globe, Settings, BookDashed, LayoutDashboard } from 'lucide-react';
 
 type AppLayoutProps = {
     children: ReactNode;
+    // lucideIcon: LucideIcon;
 };
 
 const navigation = [
     {
         label: 'Dashboard',
         href: '/dashboard',
+        // lucideIcon: LayoutDashboard,
         icon: '▦',
         available: true,
     },
     {
         label: 'Websites',
         href: '/websites',
+        // lucideIcon: Globe,
         icon: '▤',
         available: false,
     },
     {
         label: 'Templates',
         href: '/templates',
+        // lucideIcon: BookDashed,
         icon: '▧',
         available: false,
     },
     {
         label: 'Settings',
         href: '/settings',
+        // lucideIcon: Settings,
         icon: '⚙',
         available: false,
     },
@@ -69,11 +76,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                 <nav className="app-nav" aria-label="Navigasi utama">
                     {navigation.map((item) => {
-                        const active =
-                            item.href === '/dashboard'
-                                ? url === '/dashboard' ||
-                                  url.startsWith('/dashboard?')
-                                : url.startsWith(item.href);
+                        const active = item.href === '/dashboard' ? url === '/dashboard' || url.startsWith('/dashboard?') : url.startsWith(item.href);
 
                         if (!item.available) {
                             return (

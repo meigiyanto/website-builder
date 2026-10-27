@@ -11,7 +11,7 @@ body,
     --editor-border: #e4e6ed;
     --editor-text: #24263a;
     --editor-muted: #85899c;
-    --editor-primary: #C0FF80;
+    --editor-primary: rgb(102, 88, 232);
 
     display: flex;
     width: 100%;
@@ -198,6 +198,7 @@ body,
     gap: 12px;
 }
 
+
 .editor-block {
     display: flex;
     min-width: 0;
@@ -205,30 +206,64 @@ body,
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 9px;
+    padding: 10px 6px;
     border: 1px solid var(--editor-border);
-    border-radius: 9px;
+    border-radius: 10px;
     color: var(--editor-text);
     background: #fff;
     font-size: 10px;
+    line-height: 1.35;
+    text-align: center;
     cursor: pointer;
+    transition:
+        border-color 150ms ease,
+        background-color 150ms ease,
+        box-shadow 150ms ease,
+        transform 150ms ease;
 }
 
 .editor-block:hover {
     border-color: #bcb5ff;
     background: #f9f8ff;
+    box-shadow: 0 3px 10px rgb(45 35 120 / 7%);
+}
+
+.editor-block:active {
+    transform: translateY(1px);
+}
+
+.editor-block:focus-visible {
+    outline: 2px solid var(--editor-primary);
+    outline-offset: 2px;
+}
+
+.editor-block__icon {
+    flex: 0 0 auto;
+    color: var(--editor-primary);
+}
+
+.editor-block__label {
+    overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .editor-block {
+        transition: none;
+    }
 }
 
 .editor-block span {
-    color: var(--editor-primary);
-    font-size: 22px;
-    font-weight: 700;
+    color: var(--editor-text);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .editor-panel__hint {
     margin: 16px 0 0;
     color: var(--editor-muted);
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.7;
 }
 
@@ -570,6 +605,10 @@ body,
     border-color: var(--editor-primary);
 }
 
+.editor-color-field {
+    position: relative;
+}
+
 .editor-color-control {
     display: flex;
     align-items: center;
@@ -577,15 +616,19 @@ body,
     width: 100%;
 }
 
-.editor-color-control input[type="color"] {
+.editor-color-swatch {
+    display: inline-flex;
     flex: 0 0 42px;
+    align-items: center;
+    justify-content: center;
     width: 42px;
     height: 38px;
-    padding: 3px;
+    padding: 0;
+    color: #ffffff;
     cursor: pointer;
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    background: #ffffff;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 8%);
 }
 
 .editor-color-control input[type="text"] {
@@ -593,8 +636,47 @@ body,
     min-width: 0;
 }
 
+.editor-color-picker-popover {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid var(--editor-border);
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgb(15 23 42 / 14%);
+}
+
+.editor-color-picker-popover .react-colorful {
+    width: 100%;
+    height: 170px;
+}
+
+.editor-color-picker-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--editor-text);
+    font-size: 12px;
+}
+
+.editor-color-picker-footer button {
+    padding: 5px 9px;
+    color: var(--editor-text);
+    cursor: pointer;
+    border: 1px solid var(--editor-border);
+    border-radius: 6px;
+    background: #ffffff;
+}
+
 .editor-layout-presets {
     margin: 20px 0;
+    font-size: 16px;
 }
 
 .editor-layout-presets__grid {
@@ -614,7 +696,7 @@ body,
     border-radius: 8px;
     background: #fff;
     color: var(--editor-text);
-    font-size: 10px;
+    font-size: 13px;
     cursor: pointer;
 }
 
@@ -625,8 +707,10 @@ body,
 
 .editor-layout-preset span {
     color: var(--editor-primary);
-    font-size: 18px;
+    font-size: 22px;
     letter-spacing: 1px;
+    height: 22px;
+    font-weight: 500;
 }
 
 .editor-navigator {
@@ -679,6 +763,7 @@ body,
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 13px;
 }
 
 .editor-navigator__row.is-selected .editor-navigator__label {

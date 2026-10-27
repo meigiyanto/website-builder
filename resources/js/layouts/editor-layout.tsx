@@ -2,6 +2,9 @@ import { Link } from '@inertiajs/react';
 import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
+import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, AlignLeft, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
+} from 'lucide-react';
+import { HexColorPicker } from 'react-colorful' ;
 
 type EditorLayoutProps = {
     children: ReactNode;
@@ -161,6 +164,108 @@ type PanelDragState = {
     originX: number;
     originY: number;
 };
+
+type ColorPickerFieldProps = {
+    label: string;
+    property: 'color' | 'backgroundColor';
+    value: string;
+    fallback: string;
+    placeholder: string;
+    onChange: (property: InspectorProperty, value: string) => void;
+};
+
+function ColorPickerField({
+    label,
+    property,
+    value,
+    fallback,
+    placeholder,
+    onChange,
+}: ColorPickerFieldProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const pickerColor = normalizeColorForPreview(value, fallback);
+
+    return (
+        <div className="editor-field editor-color-field">
+            <span>{label}</span>
+
+            <div className="editor-color-control">
+                <button
+                    type="button"
+                    className="editor-color-swatch"
+                    style={{ backgroundColor: pickerColor }}
+                    aria-label={`Buka pemilih warna: ${label}`}
+                    aria-expanded={isOpen}
+                    onClick={() => setIsOpen((open) => !open)}
+                >
+                    <Palette size={18} aria-hidden="true" />
+                </button>
+
+                <input
+                    type="text"
+                    aria-label={`Nilai warna: ${label}`}
+                    value={value}
+                    placeholder={placeholder}
+                    onChange={(event) =>
+                        onChange(property, event.target.value)
+                    }
+                />
+            </div>
+
+            {isOpen && (
+                <div className="editor-color-picker-popover">
+                    <HexColorPicker
+                        color={pickerColor}
+                        onChange={(nextColor) =>
+                            onChange(property, nextColor)
+                        }
+                    />
+
+                    <div className="editor-color-picker-footer">
+                        <span>{pickerColor.toUpperCase()}</span>
+                        <button
+                            type="button"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Finish
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+const blockIconById = {
+    'wb-heading': Type,
+    'wb-text': AlignLeft,
+    'wb-image': ImageIcon,
+    'wb-button': MousePointerClick,
+    'wb-container': Square,
+    'wb-columns': Columns3,
+    'wb-divider': Minus,
+    'wb-spacer': ArrowUpDown,
+    'wb-hero-section': PanelsTopLeft,
+    'wb-footer': PanelBottom,
+    'wb-feature-grid': LayoutGrid,
+    'wb-navbar': Menu,
+    'wb-bullet-list': List,
+    'wb-order-list': ListOrdered,
+    'wb-quote': Quote,
+    'wb-faq': CircleHelp,
+    'wb-alert': TriangleAlert,
+    'wb-badge': BadgeCheck,
+    'wb-video': Play,
+    'wb-image-gallery': Images,
+    'wb-contact-form': Mail,
+    'wb-feature-card': Sparkles,
+    'wb-testimonial': MessageSquareQuote,
+    'wb-pricing-card': CreditCard,
+    'wb-statistics': ChartNoAxesCombined,
+    'wb-cta': ArrowRight,
+    'wb-product-card': ShoppingBag,
+} as const;
+
 
 export default function EditorLayout({
     children,
@@ -322,7 +427,7 @@ export default function EditorLayout({
                         aria-label="Kembali ke Dashboard"
                         title="Kembali ke Dashboard"
                     >
-                        ←
+                        <ArrowLeft />
                     </Link>
 
                     <div className="editor-identity">
@@ -343,7 +448,7 @@ export default function EditorLayout({
                         aria-label="Undo"
                         title="Undo (Ctrl+Z)"
                     >
-                        ↶ Undo
+                        <Undo2 size={14} />Undo
                     </button>
                     
                     <button
@@ -354,14 +459,14 @@ export default function EditorLayout({
                         aria-label="Redo"
                         title="Redo (Ctrl+Shift+Z)"
                     >
-                        ↷ Redo
+                        <Redo2 size={14} /> Redo
                     </button>
                     <button
                         type="button"
                         className="editor-button editor-button--subtle"
                         onClick={onTogglePreview}
                     >
-                        {preview ? 'Kembali ke editor' : 'Preview'}
+                        {preview ? 'Back to editor' : 'Preview'}
                     </button>
 
                     <button
@@ -589,7 +694,6 @@ export default function EditorLayout({
                                 
                                         <div className="editor-block-grid">
                                             {items.map((block) => (
-                                                
                                                 <button
                                                     key={block.id}
                                                     type="button"
@@ -597,17 +701,20 @@ export default function EditorLayout({
                                                     className="editor-block"
                                                     title={`${block.label}: klik atau seret ke kanvas`}
                                                     onClick={() => onAddBlock(block)}
-                                                    onDragStart={(event) => {
-                                                        event.dataTransfer.effectAllowed = 'copy';
-                                                        onBlockDragStart(block.id, event.nativeEvent);
-                                                    }}
-                                                    onDrag={(event) => {
-                                                        onBlockDrag(event.nativeEvent);
-                                                    }}
+                                                    onDragStart={(event) => {event.dataTransfer.effectAllowed = 'copy';onBlockDragStart(block.id, event.nativeEvent);}}
+                                                    onDrag={(event) => {onBlockDrag(event.nativeEvent);}}
                                                     onDragEnd={onBlockDragStop}
                                                 >
-                                                    <span aria-hidden="true">{block.icon}</span>
-                                                    {block.label}
+                                                    {(() => {
+                                                        const Icon = blockIconById[block.id as keyof typeof blockIconById];
+                                                    
+                                                        return (
+                                                            <>
+                                                                <Icon className="editor-block__icon" size={18} strokeWidth={1.8} aria-hidden="true" />
+                                                                <span className="editor-block__label">{block.label}</span>
+                                                            </>
+                                                        );
+                                                    })()}
                                                 </button>
 
                                             ))}
@@ -903,43 +1010,25 @@ export default function EditorLayout({
                                             <p className="editor-inspector-section__title">Color</p>
                                         
                                             <label className="editor-field">
-                                                <span>Text color</span>
-                                                
-                                                <div className="editor-color-control">
-                                                   <input
-                                                        type="color"
-                                                        aria-label="Pilih warna teks"
-                                                        value={normalizeColorForPreview(styles.color, '#24263a')}
-                                                        onChange={(event) => onStyleChange('color', event.target.value)}
-                                                    />
-                                        
-                                                    <input
-                                                        type="text"
-                                                        value={styles.color}
-                                                        placeholder="#24263a"
-                                                        onChange={(event) => onStyleChange('color', event.target.value)}
-                                                    />
-                                                </div>
+                                                <ColorPickerField
+                                                    label="Text color"
+                                                    property="color"
+                                                    value={styles.color}
+                                                    fallback="#24263a"
+                                                    placeholder="#24263a"
+                                                    onChange={onStyleChange}
+                                                />
                                             </label>
                                         
                                             <label className="editor-field">
-                                                <span>Background color</span>
-                                                
-                                                <div className="editor-color-control">
-                                                    <input
-                                                        type="color"
-                                                        aria-label="Pilih warna latar"
-                                                        value={normalizeColorForPreview(styles.backgroundColor, '#ffffff')}
-                                                        onChange={(event) => onStyleChange('backgroundColor', event.target.value )}
-                                                    />
-                                        
-                                                    <input
-                                                        type="text"
-                                                        value={styles.backgroundColor}
-                                                        placeholder="#ffffff atau transparent"
-                                                        onChange={(event) => onStyleChange('backgroundColor', event.target.value )}
-                                                    />
-                                                </div>
+                                                <ColorPickerField
+                                                    label="Background color"
+                                                    property="backgroundColor"
+                                                    value={styles.backgroundColor}
+                                                    fallback="#ffffff"
+                                                    placeholder="#ffffff atau transparent"
+                                                    onChange={onStyleChange}
+                                                />
                                             </label>
                                         </section>
                                     
