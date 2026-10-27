@@ -98,10 +98,11 @@ export type InspectorProperty =
     | 'padding'
     | 'borderRadius';
 
+
 function normalizeColorForPreview(color: string, fallback: string): string {
     const value = color.trim();
 
-    // HEX: #RGB, #RRGGBB
+    // HEX: #RGB atau #RRGGBB
     const hexMatch = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
 
     if (hexMatch) {
@@ -115,19 +116,33 @@ function normalizeColorForPreview(color: string, fallback: string): string {
         return value;
     }
 
-    // RGB / RGBA
-    const rgbMatch = value.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)$/i);
+    // RGB / RGBA, termasuk transparansi.
+    const rgbMatch = value.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([\d.]+%?))?\s*\)$/i);
 
     if (rgbMatch) {
         const channels = rgbMatch.slice(1, 4).map(Number);
+        const alpha = rgbMatch[4];
 
-        if (channels.every((channel) => channel >= 0 && channel <= 255)) {
-            return ('#' + channels.map((channel) => channel.toString(16).padStart(2, '0')).join(''));
+        const validChannels = channels.every((channel) => channel >= 0 && channel <= 255);
+
+        if (validChannels) {
+            if (alpha !== undefined) {
+                const alphaValue = alpha.endsWith('%') ? Number(alpha.slice(0, -1)) / 100 : Number(alpha);
+
+                if (!Number.isFinite(alphaValue) ||alphaValue < 0 ||alphaValue > 1) {
+                    return fallback;
+                }
+
+                if (alphaValue === 0) {
+                    return fallback;
+                }
+            }
+
+            return ('#' +channels.map((channel) => channel.toString(16).padStart(2, '0')).join(''));
         }
     }
 
-    // Nama warna atau format lain yang tidak didukung:
-    // gunakan fallback agar pratinjau tetap valid.
+    // Format yang tidak didukung menggunakan warna cadangan.
     return fallback;
 }
 

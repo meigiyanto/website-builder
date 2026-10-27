@@ -1,10 +1,10 @@
 export type ElementCategory =
+    | 'Basic'
     | 'Layout'
     | 'Navigation'
     | 'Content'
     | 'Media'
     | 'Form'
-    | 'Basic'
     | 'Marketing';
 
 export type EditorBlock = {
@@ -17,16 +17,66 @@ export type EditorBlock = {
 
 export const elementCategories = [
     'All',
+    'Basic',
     'Layout',
     'Navigation',
     'Content',
     'Media',
     'Form',
-    'Basic',
     'Marketing',
 ] as const;
 
 export const elementRegistry: EditorBlock[] = [
+    /* Basic 6 block */
+    {
+        id: 'wb-heading',
+        label: 'Heading',
+        icon: 'T',
+        category: 'Basic',
+        content:
+            '<h1 style="font-size:36px;font-weight:700;margin:0 0 16px;">Judul halaman</h1>',
+    },
+    {
+        id: 'wb-text',
+        label: 'Text',
+        icon: '¶',
+        category: 'Basic',
+        content:
+            '<p style="font-size:16px;line-height:1.7;margin:0 0 16px;">Tambahkan teks deskriptif di sini.</p>',
+    },
+    {
+        id: 'wb-image',
+        label: 'Image',
+        icon: '▧',
+        category: 'Basic',
+        content:
+            '<img src="https://placehold.co/960x420?text=Your+Image" alt="Gambar" style="display:block;width:100%;height:auto;border-radius:8px;" />',
+    },
+    {
+        id: 'wb-button',
+        label: 'Button',
+        icon: '▱',
+        category: 'Basic',
+        content:
+            '<a href="#" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#6658e8;color:#ffffff;text-decoration:none;font-weight:600;">Pelajari lebih lanjut</a>',
+    },
+    {
+        id: 'wb-container',
+        label: 'Container',
+        icon: '▦',
+        category: 'Basic',
+        content:
+            '<section style="padding:32px;margin:0 0 16px;background:#f4f5f9;border-radius:12px;"><h2 style="margin:0 0 12px;">Bagian baru</h2><p style="margin:0;line-height:1.7;">Content bagian ini.</p></section>',
+    },
+    {
+        id: 'wb-columns',
+        label: 'Columns',
+        icon: '↔',
+        category: 'Basic',
+        content:
+            '<div style="display:flex;gap:20px;align-items:flex-start;margin:0 0 20px;"><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom satu</div><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom dua</div></div>',
+    },
+    
     /* Layout 5 block */
     {
         id: 'wb-divider',
@@ -117,7 +167,7 @@ export const elementRegistry: EditorBlock[] = [
     /* Content 5 block */
     {
         id: 'wb-bullet-list',
-        label: 'Bullet List',
+        label: 'Unorder List',
         icon: '☷',
         category: 'Content',
         content: `
@@ -126,6 +176,19 @@ export const elementRegistry: EditorBlock[] = [
                 <li>Poin keunggulan kedua</li>
                 <li>Poin keunggulan ketiga</li>
             </ul>
+        `,
+    },
+    {
+        id: 'wb-order-list',
+        label: 'Order List',
+        icon: '☷',
+        category: 'Content',
+        content: `
+            <ol style="padding-left:24px;line-height:2;color:#34364a;">
+                <li>Poin keunggulan pertama</li>
+                <li>Poin keunggulan kedua</li>
+                <li>Poin keunggulan ketiga</li>
+            </ol>
         `,
     },
     {
@@ -213,56 +276,6 @@ export const elementRegistry: EditorBlock[] = [
         `,
     },
     
-    /* Basic 6 block */
-    {
-        id: 'wb-heading',
-        label: 'Heading',
-        icon: 'T',
-        category: 'Basic',
-        content:
-            '<h1 style="font-size:36px;font-weight:700;margin:0 0 16px;">Judul halaman</h1>',
-    },
-    {
-        id: 'wb-text',
-        label: 'Text',
-        icon: '¶',
-        category: 'Basic',
-        content:
-            '<p style="font-size:16px;line-height:1.7;margin:0 0 16px;">Tambahkan teks deskriptif di sini.</p>',
-    },
-    {
-        id: 'wb-image',
-        label: 'Image',
-        icon: '▧',
-        category: 'Basic',
-        content:
-            '<img src="https://placehold.co/960x420?text=Your+Image" alt="Gambar" style="display:block;width:100%;height:auto;border-radius:8px;" />',
-    },
-    {
-        id: 'wb-button',
-        label: 'Button',
-        icon: '▱',
-        category: 'Basic',
-        content:
-            '<a href="#" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#6658e8;color:#ffffff;text-decoration:none;font-weight:600;">Pelajari lebih lanjut</a>',
-    },
-    {
-        id: 'wb-container',
-        label: 'Container',
-        icon: '▦',
-        category: 'Basic',
-        content:
-            '<section style="padding:32px;margin:0 0 16px;background:#f4f5f9;border-radius:12px;"><h2 style="margin:0 0 12px;">Bagian baru</h2><p style="margin:0;line-height:1.7;">Content bagian ini.</p></section>',
-    },
-    {
-        id: 'wb-columns',
-        label: 'Columns',
-        icon: '↔',
-        category: 'Basic',
-        content:
-            '<div style="display:flex;gap:20px;align-items:flex-start;margin:0 0 20px;"><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom satu</div><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom dua</div></div>',
-    },
-    
     /* Marketing 6 block */
     {
         id: 'wb-feature-card',
@@ -320,7 +333,6 @@ export const elementRegistry: EditorBlock[] = [
             </section>
         `,
     },
-
     {
         id: 'wb-cta',
         label: 'Call to Action',

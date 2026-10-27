@@ -186,6 +186,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const blockDragHandlersRef = useRef<BlockDragHandlers | null>(null);
     const editorRef = useRef<Editor | null>(null);
     const canvasRef = useRef<HTMLDivElement | null>(null);
+    const inspectorStyleChangeRef = useRef(false);
     
     const [categoryFilter, setCategoryFilter] = useState('All');
     
@@ -418,9 +419,17 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             }
         `); 
 
+        const handleStyleableChange = () => {
+            if (inspectorStyleChangeRef.current) {
+                return;
+            }
+        
+            syncSelection(editor);
+        };
+        
         editor.on('component:selected', () => syncSelection(editor));
         editor.on('component:deselected', () => syncSelection(editor));
-        editor.on('styleable:change', () => syncSelection(editor));
+        editor.on('styleable:change', handleStyleableChange);
 
         // Jadikan halaman awal sebagai kondisi dasar.
         // Undo tidak perlu membatalkan pembuatan template awal.
@@ -559,7 +568,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             editor.off('component:remove', refreshHistory);
             editor.off('component:update', refreshHistory);
             editor.off('component:styleUpdate', refreshHistory);
-            editor.off('styleable:change', refreshHistory);
+            editor.off('styleable:change', handleStyleableChange);
             editor.off('undo', refreshHistory);
             editor.off('redo', refreshHistory);
             editor.destroy();
@@ -628,7 +637,15 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         }
     
         selected.addStyle({ [cssProperty]: value });
-        setStyles(getSelectedStyles(editor));
+        inspectorStyleChangeRef.current = true;
+
+        try {
+            selected.addStyle({ [cssProperty]: value });
+        } finally {
+            inspectorStyleChangeRef.current = false;
+        }
+        
+        setStyles((current) => ({...current, [property]: value }));
     };
 
     const togglePreview = () => {

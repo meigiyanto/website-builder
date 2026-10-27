@@ -13,7 +13,9 @@
         "@vitejs/plugin-react": "^6.1.1",
         "clsx": "^2.1.1",
         "grapesjs": "^0.23.8",
+        "lucide-react": "^1.62.0",
         "react": "^19.3.1",
+        "react-colorful": "^5.8.1",
         "react-dom": "^19.3.1",
         "typescript": "^5.7.2"
     },
