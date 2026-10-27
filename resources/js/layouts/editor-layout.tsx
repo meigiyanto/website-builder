@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import type { EditorBlock } from '../lib/website-builder/element-registry';
+import type { Component } from 'grapesjs';
 
 type EditorLayoutProps = {
     children: ReactNode;
@@ -31,6 +32,14 @@ type EditorLayoutProps = {
     canRedo: boolean;
     onUndo: () => void;
     onRedo: () => void;
+    navigatorItems: NavigatorItem[];
+    selectedComponentId: string | null;
+    onSelectNavigatorItem: (component: Component) => void;
+    onMoveNavigatorItem: (
+        component: Component,
+        direction: -1 | 1,
+    ) => void;
+    onAddLayoutPreset: (columns: 1 | 2 | 3 | 4) => void;
 };
 
 export type InspectorStyles = {
@@ -56,6 +65,16 @@ export type InspectorStyles = {
     margin: string;
     padding: string;
     borderRadius: string;
+};
+
+export type NavigatorItem = {
+    id: string;
+    label: string;
+    tagName: string;
+    depth: number;
+    component: Component;
+    canMoveUp: boolean;
+    canMoveDown: boolean;
 };
 
 export type InspectorProperty =
@@ -143,6 +162,11 @@ export default function EditorLayout({
     canRedo,
     onUndo,
     onRedo,
+    navigatorItems, 
+    selectedComponentId, 
+    onSelectNavigatorItem, 
+    onMoveNavigatorItem,
+    onAddLayoutPreset,
 }: EditorLayoutProps) {
 
     const query = searchValue.trim().toLocaleLowerCase();
@@ -266,6 +290,75 @@ export default function EditorLayout({
 
                         {blocksOpen && (
                             <div className="editor-panel__content">
+                                
+                                <section className="editor-navigator">
+                                    <p className="editor-panel__description">NAVIGATOR</p>
+                                
+                                    {navigatorItems?.length === 0 ? (
+                                        <p className="editor-navigator__empty">
+                                            Halaman belum memiliki elemen.
+                                        </p>
+                                    ) : (
+                                        <div className="editor-navigator__list">
+                                            {navigatorItems?.map((item) => (
+                                                <div
+                                                    key={item.id}
+                                                    className={`editor-navigator__row${
+                                                        item.id === selectedComponentId
+                                                            ? ' is-selected'
+                                                            : ''
+                                                    }`}
+                                                    style={{
+                                                        paddingLeft: `${8 + item.depth * 12}px`,
+                                                    }}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        className="editor-navigator__select"
+                                                        onClick={() =>
+                                                            onSelectNavigatorItem(item.component)
+                                                        }
+                                                        title={`Pilih <${item.tagName}>`}
+                                                    >
+                                                        <span aria-hidden="true">
+                                                            {item.depth > 0 ? '↳' : '◇'}
+                                                        </span>
+                                                        <span className="editor-navigator__label">
+                                                            {item.label}
+                                                        </span>
+                                                    </button>
+                                
+                                                    <div className="editor-navigator__actions">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                onMoveNavigatorItem(item.component, -1)
+                                                            }
+                                                            disabled={!item.canMoveUp}
+                                                            aria-label={`Naikkan ${item.label}`}
+                                                            title="Pindah ke atas"
+                                                        >
+                                                            ↑
+                                                        </button>
+                                
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                onMoveNavigatorItem(item.component, 1)
+                                                            }
+                                                            disabled={!item.canMoveDown}
+                                                            aria-label={`Turunkan ${item.label}`}
+                                                            title="Pindah ke bawah"
+                                                        >
+                                                            ↓
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </section>
+
                                 <p className="editor-panel__description">KATALOG ELEMENT</p>
                                 
                                 <label className="editor-catalog-search">
@@ -291,19 +384,47 @@ export default function EditorLayout({
                                         aria-label="Filter kategori elemen"
                                     >
                                         {categories.map((category) => (
-                                            <option key={category} value={category}>
-                                                {category}
-                                            </option>
+                                            <option key={category} value={category}>{category}</option>
                                         ))}
                                     </select>
                                 </label>
 
+                                <section className="editor-layout-presets">
+                                    <p className="editor-panel__description">LAYOUT CEPAT</p>
+                                
+                                    <div className="editor-layout-presets__grid">
+                                        {([1, 2, 3, 4] as const).map((columns) => (
+                                            <button
+                                                key={columns}
+                                                type="button"
+                                                className="editor-layout-preset"
+                                                draggable
+                                                onClick={() => onAddLayoutPreset(columns)}
+                                                onDragStart={(event) => {
+                                                    event.dataTransfer.effectAllowed = 'copy';
+                                            
+                                                    onBlockDragStart(
+                                                        `wb-layout-${columns}`,
+                                                        event.nativeEvent,
+                                                    );
+                                                }}
+                                                onDrag={(event) => {
+                                                    onBlockDrag(event.nativeEvent);
+                                                }}
+                                                onDragEnd={onBlockDragStop}
+                                                title={`Tambahkan layout ${columns} kolom`}
+                                            >
+                                                <span aria-hidden="true">
+                                                    {'▥'.repeat(columns)}
+                                                </span>
+                                                {columns} kolom
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
                                 
                                 {groupedBlocks.map(({ category, items }) => (
-                                    <section
-                                        className="editor-block-category"
-                                        key={category}
-                                    >
+                                    <section className="editor-block-category" key={category}>
                                         <p className="editor-block-category__title">
                                             {category}
                                         </p>

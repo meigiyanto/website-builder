@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
-import grapesjs, { type Editor } from 'grapesjs';
+import grapesjs, { type Component, type Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import EditorLayout, { type InspectorProperty, type InspectorStyles } from '../layouts/editor-layout';
+import EditorLayout, { type InspectorProperty, type InspectorStyles, type NavigatorItem } from '../layouts/editor-layout';
 import { elementCategories, elementRegistry, type EditorBlock } from '../lib/website-builder/element-registry';
 import '../../css/editor.scss';
 
@@ -35,53 +35,44 @@ const emptyStyles: InspectorStyles = {
     borderRadius: '',
 };
 
+function getNavigatorItems(editor: Editor): NavigatorItem[] {
+    const items: NavigatorItem[] = [];
+
+    const visit = (parent: Component, depth: number) => {
+        const children = parent.components().models;
+
+        children.forEach((component, index) => {
+            const tagName = String(component.get('tagName') || 'div').toLowerCase();
+
+            items.push({
+                id: component.getId(),
+                label: component.getName() || tagName,
+                tagName,
+                depth,
+                component,
+                canMoveUp: index > 0,
+                canMoveDown: index < children.length - 1,
+            });
+
+            visit(component, depth + 1);
+        });
+    };
+
+    const wrapper = editor.getWrapper();
+
+    if (wrapper) {
+        visit(wrapper, 0);
+    }
+
+    return items;
+}
+
+
 type BlockDragHandlers = {
     start: (blockId: string, event: Event) => void;
     drag: (event: Event) => void;
     stop: () => void;
 };
-
-/*
-function getSelectedStyles(editor: Editor): InspectorStyles {
-    const selected = editor.getSelected();
-
-    if (!selected) {
-        return emptyStyles;
-    }
-
-    const style = selected.getStyle() as Record<string, string>;
-    const attributes = selected.getAttributes() as Record<string, string>;
-    const tagName = String(selected.get('tagName') || 'div').toLowerCase();
-    const canEditContent = selected.components().length === 0 && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'button', 'li', 'label', 'strong', 'em'].includes(tagName);
-
-    const readStyle = (property: string) => style[property] || '';
-
-    return {
-        tagName,
-        content: String(selected.get('content') || ''),
-        href: attributes.href || '',
-        canEditContent,
-        isLink: tagName === 'a',
-        color: readStyle('color'),
-        backgroundColor: readStyle('background-color') || readStyle('backgroundColor'),
-        fontFamily: readStyle('font-family') || readStyle('fontFamily'),
-        fontSize: readStyle('font-size') || readStyle('fontSize'),
-        fontWeight: readStyle('font-weight') || readStyle('fontWeight'),
-        lineHeight: readStyle('line-height') || readStyle('lineHeight'),
-        textAlign: readStyle('text-align') || readStyle('textAlign'),
-        display: readStyle('display'),
-        flexDirection: readStyle('flex-direction') || readStyle('flexDirection'),
-        justifyContent: readStyle('justify-content') || readStyle('justifyContent'),
-        alignItems: readStyle('align-items') || readStyle('alignItems'),
-        gap: readStyle('gap'),
-        width: readStyle('width'),
-        maxWidth: readStyle('max-width') || readStyle('maxWidth'),
-        margin: readStyle('margin'),
-        padding: readStyle('padding'),
-        borderRadius: readStyle('border-radius') || readStyle('borderRadius'),
-    };
-}
-*/
 
 function getSelectedStyles(editor: Editor): InspectorStyles {
     const selected = editor.getSelected();
@@ -91,13 +82,29 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
     }
 
     const inlineStyles = selected.getStyle() as Record<string, string>;
+    const attributes = selected.getAttributes() as Record<string, string>;
+    const tagName = String(selected.get('tagName') || 'div').toLowerCase();
     const element = selected.getEl();
     const view = element?.ownerDocument?.defaultView;
+    const computedStyles =
+        element && view ? view.getComputedStyle(element) : null;
 
-    const computedStyles = element && view ? view.getComputedStyle(element) : null;
+    const editableTags = [
+        'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'span', 'a', 'button', 'li', 'label', 'strong', 'em',
+    ];
 
-    const readStyle = (cssProperty: string, camelCaseProperty: string): string => {
-        const inlineValue = inlineStyles[camelCaseProperty] ?? inlineStyles[cssProperty];
+    const canEditContent =
+        selected.components().length === 0 &&
+        editableTags.includes(tagName);
+
+    const readStyle = (
+        cssProperty: string,
+        camelCaseProperty: string,
+    ): string => {
+        const inlineValue =
+            inlineStyles[camelCaseProperty] ??
+            inlineStyles[cssProperty];
 
         if (inlineValue) {
             return inlineValue;
@@ -108,14 +115,11 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
 
     return {
         ...emptyStyles,
-
-        tagName: selected.get('tagName') || '',
-        content: selected.get('content') || '',
-        href: selected.getAttributes()?.href || '',
-
-        // Pertahankan nilai yang sudah ditentukan oleh Inspector.
-        canEditContent: emptyStyles.canEditContent,
-        isLink: emptyStyles.isLink,
+        tagName,
+        content: String(selected.get('content') || ''),
+        href: String(attributes.href || ''),
+        canEditContent,
+        isLink: tagName === 'a',
 
         color: readStyle('color', 'color'),
         backgroundColor: readStyle('background-color', 'backgroundColor'),
@@ -137,12 +141,38 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
     };
 }
 
+function createLayoutMarkup(columns: 1 | 2 | 3 | 4): string {
+    const columnMarkup = Array.from(
+        { length: columns },
+        (_, index) => `
+            <div class="wb-layout-column">
+                <h3>Kolom ${index + 1}</h3>
+                <p>Tambahkan konten di sini.</p>
+            </div>
+        `,
+    ).join('');
+
+    return `
+        <section class="wb-layout-section">
+            <div
+                class="wb-layout-columns"
+                style="--wb-column-count: ${columns};"
+            >
+                ${columnMarkup}
+            </div>
+        </section>
+    `;
+}
+
 export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const [blocksOpen, setBlocksOpen] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(true);
     const [preview, setPreview] = useState(false);
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
+    
+    const [navigatorItems, setNavigatorItems] = useState<NavigatorItem[]>([]);
+    const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
     
     const [selectedElement, setSelectedElement] = useState<string | null>(null);
     const [searchValue, setSearchValue] = useState('');
@@ -172,6 +202,10 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const syncHistory = useCallback((editor: Editor) => {
         setCanUndo(editor.UndoManager.hasUndo());
         setCanRedo(editor.UndoManager.hasRedo());
+    }, []);
+    
+    const syncNavigator = useCallback((editor: Editor) => {
+        setNavigatorItems(getNavigatorItems(editor));
     }, []);
 
     useEffect(() => {
@@ -207,6 +241,14 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             canvas: {
                 styles: [],
             },
+        });
+        
+        ([1, 2, 3, 4] as const).forEach((columns) => {
+            editor.BlockManager.add(`wb-layout-${columns}`, {
+                label: `Layout ${columns} kolom`,
+                category: 'Layout cepat',
+                content: createLayoutMarkup(columns),
+            });
         });
         
         editor.on('block:custom', ({ bm, dragStart, drag, dragStop }) => {
@@ -307,6 +349,45 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                     font-size: 32px;
                 }
             }
+            
+            .wb-layout-section {
+                box-sizing: border-box;
+                width: 100%;
+                padding: 24px;
+                margin: 0 0 20px;
+            }
+            
+            .wb-layout-columns {
+                display: grid;
+                grid-template-columns:
+                    repeat(var(--wb-column-count, 2), minmax(0, 1fr));
+                gap: 16px;
+            }
+            
+            .wb-layout-column {
+                box-sizing: border-box;
+                min-width: 0;
+                padding: 20px;
+                border: 1px dashed #c9cddd;
+                border-radius: 8px;
+                background: #f8fafc;
+            }
+            
+            .wb-layout-column h3 {
+                margin: 0 0 8px;
+            }
+            
+            .wb-layout-column p {
+                margin: 0;
+                color: #666b80;
+                line-height: 1.6;
+            }
+            
+            @media (max-width: 640px) {
+                .wb-layout-columns {
+                    grid-template-columns: 1fr;
+                }
+            }
         `); 
 
         editor.on('component:selected', () => syncSelection(editor));
@@ -320,6 +401,20 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         editorRef.current = editor;
         syncHistory(editor);
         
+        const refreshNavigator = () => {
+            window.requestAnimationFrame(() => {
+                if (editorRef.current === editor) {
+                    syncNavigator(editor);
+                }
+            });
+        };
+        
+        editor.on('component:add', refreshNavigator);
+        editor.on('component:remove', refreshNavigator);
+        editor.on('component:drag:end', refreshNavigator);
+        
+        syncNavigator(editor);
+        
         const refreshHistory = () => {
             window.requestAnimationFrame(() => {
                 if (editorRef.current === editor) {
@@ -328,11 +423,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             });
         };
         
-        const handleHistoryShortcut = (event: KeyboardEvent) => {
-        const target = event.target as HTMLElement | null;
-        const tagName = target?.tagName?.toLowerCase();
-    
-        // Perbarui status tombol ketika struktur atau gaya berubah.
+        // Daftarkan listener satu kali saat editor dibuat.
         editor.on('component:add', refreshHistory);
         editor.on('component:remove', refreshHistory);
         editor.on('component:update', refreshHistory);
@@ -340,87 +431,98 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         editor.on('styleable:change', refreshHistory);
         editor.on('undo', refreshHistory);
         editor.on('redo', refreshHistory);
-    
-        // Jangan mengambil alih shortcut ketika pengguna sedang mengetik.
-        if (
-            tagName === 'input' ||
-            tagName === 'textarea' ||
-            tagName === 'select' ||
-            target?.isContentEditable ||
-            target?.closest?.('[contenteditable="true"]')
-        ) {
-            return;
-        }
-    
-        const key = event.key.toLowerCase();
-        const hasModifier = event.ctrlKey || event.metaKey;
-    
-        if (!hasModifier || event.altKey) {
-            return;
-        }
-    
-        const isUndo = key === 'z' && !event.shiftKey;
-        const isRedo =
-            (key === 'z' && event.shiftKey) ||
-            (key === 'y' && event.ctrlKey && !event.metaKey);
-    
-        if (isUndo) {
-            event.preventDefault();
-    
-            if (editor.UndoManager.hasUndo()) {
-                editor.UndoManager.undo();
-                syncSelection(editor);
+        
+        const handleHistoryShortcut = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement | null;
+            const tagName = target?.tagName?.toLowerCase();
+        
+            // Perbarui status tombol ketika struktur atau gaya berubah.
+            editor.on('component:add', refreshHistory);
+            editor.on('component:remove', refreshHistory);
+            editor.on('component:update', refreshHistory);
+            editor.on('component:styleUpdate', refreshHistory);
+            editor.on('styleable:change', refreshHistory);
+            editor.on('undo', refreshHistory);
+            editor.on('redo', refreshHistory);
+        
+            // Jangan mengambil alih shortcut ketika pengguna sedang mengetik.
+            if (
+                tagName === 'input' ||
+                tagName === 'textarea' ||
+                tagName === 'select' ||
+                target?.isContentEditable ||
+                target?.closest?.('[contenteditable="true"]')
+            ) {
+                return;
             }
-    
-            syncHistory(editor);
-            return;
-        }
-    
-        if (isRedo) {
-            event.preventDefault();
-    
-            if (editor.UndoManager.hasRedo()) {
-                editor.UndoManager.redo();
-                syncSelection(editor);
+        
+            const key = event.key.toLowerCase();
+            const hasModifier = event.ctrlKey || event.metaKey;
+        
+            if (!hasModifier || event.altKey) {
+                return;
             }
-    
-            syncHistory(editor);
-        }
-    };
-    
-    // Shortcut GrapesJS bawaan diganti dengan handler yang
-    // melindungi input dan area pengeditan teks.
-    editor.Keymaps.remove('core:undo');
-    editor.Keymaps.remove('core:redo');
-    
-    document.addEventListener('keydown', handleHistoryShortcut);
-    
-    // Kanvas GrapesJS berjalan di dalam iframe, jadi pasang
-    // listener juga pada dokumen kanvas.
-    let canvasDocument: Document | null = null;
-    
-    const attachCanvasKeyboard = () => {
-        const frame = editor.Canvas.getFrameEl();
-        const nextDocument = frame?.contentDocument ?? null;
-    
-        if (!nextDocument || nextDocument === canvasDocument) {
-            return;
-        }
-    
-        canvasDocument?.removeEventListener(
-            'keydown',
-            handleHistoryShortcut,
-        );
-    
-        canvasDocument = nextDocument;
-        canvasDocument.addEventListener(
-            'keydown',
-            handleHistoryShortcut,
-        );
-    };
-    
-    editor.on('canvas:frame:load', attachCanvasKeyboard);
-    attachCanvasKeyboard();
+        
+            const isUndo = key === 'z' && !event.shiftKey;
+            const isRedo = (key === 'z' && event.shiftKey) || (key === 'y' && event.ctrlKey && !event.metaKey);
+        
+            if (isUndo) {
+                event.preventDefault();
+        
+                if (editor.UndoManager.hasUndo()) {
+                    editor.UndoManager.undo();
+                    syncSelection(editor);
+                }
+        
+                syncHistory(editor);
+                return;
+            }
+        
+            if (isRedo) {
+                event.preventDefault();
+        
+                if (editor.UndoManager.hasRedo()) {
+                    editor.UndoManager.redo();
+                    syncSelection(editor);
+                }
+        
+                syncHistory(editor);
+            }
+        };    
+        
+        // Shortcut GrapesJS bawaan diganti dengan handler yang
+        // melindungi input dan area pengeditan teks.
+        editor.Keymaps.remove('core:undo');
+        editor.Keymaps.remove('core:redo');
+        
+        document.addEventListener('keydown', handleHistoryShortcut);
+        
+        // Kanvas GrapesJS berjalan di dalam iframe, jadi pasang
+        // listener juga pada dokumen kanvas.
+        let canvasDocument: Document | null = null;
+        
+        const attachCanvasKeyboard = () => {
+            const frame = editor.Canvas.getFrameEl();
+            const nextDocument = frame?.contentDocument ?? null;
+        
+            if (!nextDocument || nextDocument === canvasDocument) {
+                return;
+            }
+        
+            canvasDocument?.removeEventListener(
+                'keydown',
+                handleHistoryShortcut,
+            );
+        
+            canvasDocument = nextDocument;
+            canvasDocument.addEventListener(
+                'keydown',
+                handleHistoryShortcut,
+            );
+        };
+        
+        editor.on('canvas:frame:load', attachCanvasKeyboard);
+        attachCanvasKeyboard();
         
         return () => {
             document.removeEventListener('keydown', handleHistoryShortcut);
@@ -431,10 +533,13 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             );
             
             editor.off('canvas:frame:load', attachCanvasKeyboard);
+            editor.off('component:add', refreshNavigator);
+            editor.off('component:remove', refreshNavigator);
+            editor.off('component:drag:end', refreshNavigator);
             editor.destroy();
             editorRef.current = null;
         };
-    }, [syncSelection, syncHistory]);
+    }, [syncSelection, syncHistory, syncNavigator]);
 
     const addBlock = (block: EditorBlock) => {
         const editor = editorRef.current;
@@ -528,7 +633,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     
     const handleRedo = () => {
         const editor = editorRef.current;
-    
+        
         if (!editor || !editor.UndoManager.hasRedo()) {
             return;
         }
@@ -555,6 +660,104 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     
     const handleBlockDragStop = () => {
         blockDragHandlersRef.current?.stop();
+    };
+    
+    const selectNavigatorItem = (component: Component) => {
+        const editor = editorRef.current;
+    
+        if (!editor) return;
+    
+        editor.select(component);
+        syncSelection(editor);
+    };
+    
+    const moveNavigatorItem = (component: Component, direction: -1 | 1) => {
+        const editor = editorRef.current;
+        const parent = component.parent();
+    
+        if (!editor || !parent) return;
+    
+        const index = component.index();
+        const nextIndex = index + direction;
+        const siblingCount = parent.components().length;
+    
+        if (nextIndex < 0 || nextIndex >= siblingCount) {
+            return;
+        }
+    
+        // GrapesJS menyesuaikan indeks ketika komponen
+        // dipindahkan dalam parent yang sama.
+        const at =
+            direction === -1
+                ? nextIndex
+                : nextIndex + 1;
+    
+        component.move(parent, { at });
+    
+        editor.select(component);
+        syncSelection(editor);
+        syncNavigator(editor);
+        syncHistory(editor);
+    };
+    
+    const addLayoutPreset = (columns: 1 | 2 | 3 | 4) => {
+        const editor = editorRef.current;
+    
+        if (!editor) return;
+    
+        const selected = editor.getSelected();
+        const containerTags = [
+            'div',
+            'section',
+            'main',
+            'header',
+            'footer',
+            'article',
+            'nav',
+            'aside',
+        ];
+    
+        const selectedTag = String(selected?.get('tagName') || '').toLowerCase();
+    
+        const wrapper = editor.getWrapper();
+
+        if (!wrapper) {
+            return;
+        }
+        
+        const target = selected && containerTags.includes(selectedTag) ? selected : wrapper;
+    
+        const columnMarkup = Array.from(
+            { length: columns },
+            (_, index) => `
+                <div class="wb-layout-column">
+                    <h3>Kolom ${index + 1}</h3>
+                    <p>Tambahkan konten di sini.</p>
+                </div>
+            `,
+        ).join('');
+    
+        const markup = `
+            <section class="wb-layout-section">
+                <div
+                    class="wb-layout-columns"
+                    style="--wb-column-count: ${columns};"
+                >
+                    ${columnMarkup}
+                </div>
+            </section>
+        `;
+    
+        const added = target.append(markup);
+        const component = added[0];
+    
+        if (component) {
+            editor.select(component);
+            syncSelection(editor);
+        }
+    
+        syncNavigator(editor);
+        syncHistory(editor);
     };
 
     return (
@@ -586,6 +789,11 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                 canRedo={canRedo}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
+                navigatorItems={navigatorItems}
+                selectedComponentId={selectedComponentId}
+                onSelectNavigatorItem={selectNavigatorItem}
+                onMoveNavigatorItem={moveNavigatorItem}
+                onAddLayoutPreset={addLayoutPreset}
             >
                 <div
                     id="gjs-canvas"

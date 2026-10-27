@@ -592,3 +592,128 @@ body,
     flex: 1;
     min-width: 0;
 }
+
+.editor-layout-presets {
+    margin: 20px 0;
+}
+
+.editor-layout-presets__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.editor-layout-preset {
+    display: flex;
+    min-height: 56px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid var(--editor-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--editor-text);
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.editor-layout-preset:hover {
+    border-color: #bcb5ff;
+    background: #f9f8ff;
+}
+
+.editor-layout-preset span {
+    color: var(--editor-primary);
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.editor-navigator {
+    margin-bottom: 22px;
+}
+
+.editor-navigator__list {
+    display: flex;
+    max-height: 260px;
+    flex-direction: column;
+    gap: 3px;
+    overflow: auto;
+}
+
+.editor-navigator__row {
+    display: flex;
+    min-width: 0;
+    min-height: 32px;
+    align-items: center;
+    gap: 3px;
+    border-radius: 6px;
+}
+
+.editor-navigator__row.is-selected {
+    background: #f0eeff;
+}
+
+.editor-navigator__select {
+    display: flex;
+    min-width: 0;
+    min-height: 30px;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    border: 0;
+    background: transparent;
+    color: var(--editor-text);
+    text-align: left;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.editor-navigator__select > span:first-child {
+    flex: 0 0 auto;
+    color: var(--editor-muted);
+}
+
+.editor-navigator__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-navigator__row.is-selected .editor-navigator__label {
+    color: #5142d6;
+    font-weight: 700;
+}
+
+.editor-navigator__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 1px;
+}
+
+.editor-navigator__actions button {
+    width: 22px;
+    height: 25px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--editor-muted);
+    cursor: pointer;
+}
+
+.editor-navigator__actions button:hover:not(:disabled) {
+    background: #e5e1ff;
+    color: #5142d6;
+}
+
+.editor-navigator__actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+}
+
+.editor-navigator__empty {
+    color: var(--editor-muted);
+    font-size: 10px;
+    line-height: 1.6;
+}
