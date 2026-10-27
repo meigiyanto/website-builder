@@ -52,10 +52,7 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
     const style = selected.getStyle() as Record<string, string>;
     const attributes = selected.getAttributes() as Record<string, string>;
     const tagName = String(selected.get('tagName') || 'div').toLowerCase();
-    const canEditContent =
-        selected.components().length === 0 &&
-        ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a',
-            'button', 'li', 'label', 'strong', 'em'].includes(tagName);
+    const canEditContent = selected.components().length === 0 && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'button', 'li', 'label', 'strong', 'em'].includes(tagName);
 
     const readStyle = (property: string) => style[property] || '';
 
@@ -99,23 +96,44 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
 
     const computedStyles = element && view ? view.getComputedStyle(element) : null;
 
-    const readStyle = ( cssProperty: string, camelCaseProperty: string ): string => {
-        // Prioritaskan gaya yang ditetapkan langsung pada komponen.
-        const inlineValue = inlineStyles[cssProperty] ?? inlineStyles[camelCaseProperty];
+    const readStyle = (cssProperty: string, camelCaseProperty: string): string => {
+        const inlineValue = inlineStyles[camelCaseProperty] ?? inlineStyles[cssProperty];
 
         if (inlineValue) {
             return inlineValue;
         }
 
-        // Jika tidak ada, baca gaya efektif dari kanvas.
-        return (computedStyles?.getPropertyValue(cssProperty).trim() ||'');
+        return computedStyles?.getPropertyValue(cssProperty).trim() ?? '';
     };
 
     return {
+        ...emptyStyles,
+
+        tagName: selected.get('tagName') || '',
+        content: selected.get('content') || '',
+        href: selected.getAttributes()?.href || '',
+
+        // Pertahankan nilai yang sudah ditentukan oleh Inspector.
+        canEditContent: emptyStyles.canEditContent,
+        isLink: emptyStyles.isLink,
+
         color: readStyle('color', 'color'),
-        backgroundColor: readStyle('background-color','backgroundColor'),
-        padding: readStyle('padding', 'padding'),
+        backgroundColor: readStyle('background-color', 'backgroundColor'),
+        fontFamily: readStyle('font-family', 'fontFamily'),
         fontSize: readStyle('font-size', 'fontSize'),
+        fontWeight: readStyle('font-weight', 'fontWeight'),
+        lineHeight: readStyle('line-height', 'lineHeight'),
+        textAlign: readStyle('text-align', 'textAlign'),
+        display: readStyle('display', 'display'),
+        flexDirection: readStyle('flex-direction', 'flexDirection'),
+        justifyContent: readStyle('justify-content', 'justifyContent'),
+        alignItems: readStyle('align-items', 'alignItems'),
+        gap: readStyle('gap', 'gap'),
+        width: readStyle('width', 'width'),
+        maxWidth: readStyle('max-width', 'maxWidth'),
+        margin: readStyle('margin', 'margin'),
+        padding: readStyle('padding', 'padding'),
+        borderRadius: readStyle('border-radius', 'borderRadius'),
     };
 }
 

@@ -79,6 +79,44 @@ export type InspectorProperty =
     | 'padding'
     | 'borderRadius';
 
+function normalizeColorForPreview(color: string, fallback: string): string {
+    const value = color.trim();
+
+    // HEX: #RGB, #RRGGBB
+    const hexMatch = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+
+    if (hexMatch) {
+        if (hexMatch[1].length === 3) {
+            return `#${hexMatch[1]
+                .split('')
+                .map((char) => char + char)
+                .join('')}`;
+        }
+
+        return value;
+    }
+
+    // RGB / RGBA
+    const rgbMatch = value.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)$/i);
+
+    if (rgbMatch) {
+        const channels = rgbMatch.slice(1, 4).map(Number);
+
+        if (channels.every((channel) => channel >= 0 && channel <= 255)) {
+            return (
+                '#' +
+                channels
+                    .map((channel) => channel.toString(16).padStart(2, '0'))
+                    .join('')
+            );
+        }
+    }
+
+    // Nama warna atau format lain yang tidak didukung:
+    // gunakan fallback agar pratinjau tetap valid.
+    return fallback;
+}
+
 export default function EditorLayout({
     children,
     websiteName,
@@ -383,7 +421,7 @@ export default function EditorLayout({
                                                 <p className="editor-inspector-section__title">Konten</p>
                                     
                                                 <label className="editor-field">
-                                                    <span>Teks</span>
+                                                    <span>Text</span>
                                                     <textarea
                                                         value={styles.content}
                                                         rows={3}
@@ -395,7 +433,7 @@ export default function EditorLayout({
                                     
                                                 {styles.isLink && (
                                                     <label className="editor-field">
-                                                        <span>URL tujuan</span>
+                                                        <span>URL destination</span>
                                                         <input
                                                             type="text"
                                                             value={styles.href}
@@ -433,7 +471,7 @@ export default function EditorLayout({
                                             {styles.display === 'flex' && (
                                                 <>
                                                     <label className="editor-field">
-                                                        <span>Arah Flex</span>
+                                                        <span>Flex Direction</span>
                                                         <select
                                                             value={styles.flexDirection}
                                                             onChange={(event) =>
@@ -484,8 +522,8 @@ export default function EditorLayout({
                                             )}
                                     
                                             {[
-                                                ['Lebar', 'width'],
-                                                ['Lebar maksimum', 'maxWidth'],
+                                                ['Width', 'width'],
+                                                ['Max width', 'maxWidth'],
                                                 ['Gap', 'gap'],
                                             ].map(([label, property]) => (
                                                 <label className="editor-field" key={property}>
@@ -494,19 +532,14 @@ export default function EditorLayout({
                                                         type="text"
                                                         value={styles[property as keyof InspectorStyles] as string}
                                                         placeholder="Contoh: 100% atau 16px"
-                                                        onChange={(event) =>
-                                                            onStyleChange(
-                                                                property as InspectorProperty,
-                                                                event.target.value,
-                                                            )
-                                                        }
+                                                        onChange={(event) => onStyleChange(property as InspectorProperty,event.target.value)}
                                                     />
                                                 </label>
                                             ))}
                                         </section>
                                     
                                         <section className="editor-inspector-section">
-                                            <p className="editor-inspector-section__title">Tipografi</p>
+                                            <p className="editor-inspector-section__title">Typograhy</p>
                                     
                                             <label className="editor-field">
                                                 <span>Font family</span>
@@ -527,7 +560,7 @@ export default function EditorLayout({
                                             </label>
                                     
                                             <label className="editor-field">
-                                                <span>Ukuran teks</span>
+                                                <span>Font size</span>
                                                 <input
                                                     type="text"
                                                     value={styles.fontSize}
@@ -539,7 +572,7 @@ export default function EditorLayout({
                                             </label>
                                     
                                             <label className="editor-field">
-                                                <span>Ketebalan</span>
+                                                <span>Thickness</span>
                                                 <select
                                                     value={styles.fontWeight}
                                                     onChange={(event) =>
@@ -569,7 +602,7 @@ export default function EditorLayout({
                                             </label>
                                     
                                             <label className="editor-field">
-                                                <span>Perataan teks</span>
+                                                <span>Text alignment</span>
                                                 <select
                                                     value={styles.textAlign}
                                                     onChange={(event) =>
@@ -586,23 +619,17 @@ export default function EditorLayout({
                                         </section>
                                     
                                         <section className="editor-inspector-section">
-                                            <p className="editor-inspector-section__title">Warna</p>
+                                            <p className="editor-inspector-section__title">Color</p>
                                         
                                             <label className="editor-field">
-                                                <span>Warna teks</span>
-                                        
+                                                <span>Text color</span>
+                                                <span className="editor-color-preview" style={{backgroundColor: normalizeColorForPreview(styles.color,'#24263a') }}/>
                                                 <div className="editor-color-control">
-                                                    <input
+                                                   <input
                                                         type="color"
                                                         aria-label="Pilih warna teks"
-                                                        value={
-                                                            /^#[0-9a-fA-F]{6}$/.test(styles.color)
-                                                                ? styles.color
-                                                                : '#24263a'
-                                                        }
-                                                        onChange={(event) =>
-                                                            onStyleChange('color', event.target.value)
-                                                        }
+                                                        value={/^#[0-9a-fA-F]{6}$/.test(styles.color) ? styles.color : '#24263a'}
+                                                        onChange={(event) => onStyleChange('color', event.target.value)}
                                                     />
                                         
                                                     <input
@@ -617,42 +644,28 @@ export default function EditorLayout({
                                             </label>
                                         
                                             <label className="editor-field">
-                                                <span>Warna latar</span>
-                                        
+                                                <span>Background color</span>
+                                                <span className="editor-color-preview" style={{backgroundColor: normalizeColorForPreview(styles.backgroundColor, '#ffffff') }}/>
                                                 <div className="editor-color-control">
                                                     <input
                                                         type="color"
                                                         aria-label="Pilih warna latar"
-                                                        value={
-                                                            /^#[0-9a-fA-F]{6}$/.test(styles.backgroundColor)
-                                                                ? styles.backgroundColor
-                                                                : '#ffffff'
-                                                        }
-                                                        onChange={(event) =>
-                                                            onStyleChange(
-                                                                'backgroundColor',
-                                                                event.target.value,
-                                                            )
-                                                        }
+                                                        value={/^#[0-9a-fA-F]{6}$/.test(styles.backgroundColor) ? styles.backgroundColor : '#ffffff'}
+                                                        onChange={(event) => onStyleChange('backgroundColor', event.target.value )}
                                                     />
                                         
                                                     <input
                                                         type="text"
                                                         value={styles.backgroundColor}
                                                         placeholder="#ffffff atau transparent"
-                                                        onChange={(event) =>
-                                                            onStyleChange(
-                                                                'backgroundColor',
-                                                                event.target.value,
-                                                            )
-                                                        }
+                                                        onChange={(event) => onStyleChange('backgroundColor', event.target.value )}
                                                     />
                                                 </div>
                                             </label>
                                         </section>
                                     
                                         <section className="editor-inspector-section">
-                                            <p className="editor-inspector-section__title">Spacing dan bentuk</p>
+                                            <p className="editor-inspector-section__title">Spacing & Box Model</p>
                                     
                                             {[
                                                 ['Margin', 'margin'],
