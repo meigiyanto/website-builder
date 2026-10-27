@@ -296,7 +296,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         
         elementRegistry.forEach((block) => {
             editor.BlockManager.add(block.id, {
-                label: `${block.icon} ${block.label}`,
+                label: `${block.lucideIcon} ${block.label}`,
                 category: block.category,
                 content: block.content,
                 select: true,
@@ -534,16 +534,10 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                 return;
             }
         
-            canvasDocument?.removeEventListener(
-                'keydown',
-                handleHistoryShortcut,
-            );
+            canvasDocument?.removeEventListener('keydown', handleHistoryShortcut);
         
             canvasDocument = nextDocument;
-            canvasDocument.addEventListener(
-                'keydown',
-                handleHistoryShortcut,
-            );
+            canvasDocument.addEventListener('keydown', handleHistoryShortcut);
         };
         
         editor.on('canvas:frame:load', attachCanvasKeyboard);
@@ -552,10 +546,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         return () => {
             document.removeEventListener('keydown', handleHistoryShortcut);
 
-            canvasDocument?.removeEventListener(
-                'keydown',
-                handleHistoryShortcut,
-            );
+            canvasDocument?.removeEventListener('keydown', handleHistoryShortcut);
             
             editor.off('canvas:frame:load', attachCanvasKeyboard);
             editor.off('component:add', refreshNavigator);

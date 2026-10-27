@@ -15,7 +15,6 @@ export type EditorBlock = {
     id: string;
     label: string;
     lucideIcon: LucideIcon;
-    icon: string;
     category: ElementCategory;
     content: string;
 };
@@ -37,7 +36,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-heading',
         label: 'Heading',
         lucideIcon: Type,
-        icon: 'T',
         category: 'Basic',
         content:
             '<h1 style="font-size:36px;font-weight:700;margin:0 0 16px;">Judul halaman</h1>',
@@ -46,7 +44,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-text',
         label: 'Text',
         lucideIcon: AlignLeft,
-        icon: '¶',
         category: 'Basic',
         content:
             '<p style="font-size:16px;line-height:1.7;margin:0 0 16px;">Tambahkan teks deskriptif di sini.</p>',
@@ -55,7 +52,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-image',
         label: 'Image',
         lucideIcon: Image,
-        icon: '▧',
         category: 'Basic',
         content:
             '<img src="https://placehold.co/960x420?text=Your+Image" alt="Gambar" style="display:block;width:100%;height:auto;border-radius:8px;" />',
@@ -64,7 +60,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-button',
         label: 'Button',
         lucideIcon: MousePointerClick,
-        icon: '▱',
         category: 'Basic',
         content:
             '<a href="#" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#6658e8;color:#ffffff;text-decoration:none;font-weight:600;">Pelajari lebih lanjut</a>',
@@ -73,7 +68,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-container',
         label: 'Container',
         lucideIcon: Square,
-        icon: '▦',
         category: 'Basic',
         content:
             '<section style="padding:32px;margin:0 0 16px;background:#f4f5f9;border-radius:12px;"><h2 style="margin:0 0 12px;">Bagian baru</h2><p style="margin:0;line-height:1.7;">Content bagian ini.</p></section>',
@@ -82,7 +76,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-columns',
         label: 'Columns',
         lucideIcon: Columns3,
-        icon: '↔',
         category: 'Basic',
         content:
             '<div style="display:flex;gap:20px;align-items:flex-start;margin:0 0 20px;"><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom satu</div><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom dua</div></div>',
@@ -93,7 +86,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-divider',
         label: 'Divider',
         lucideIcon: Minus,
-        icon: '―',
         category: 'Layout',
         content: `<hr style="border:0;border-top:1px solid #e5e7eb;margin:24px 0;" />`,
     },
@@ -101,7 +93,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-spacer',
         label: 'Spacer',
         lucideIcon: ArrowUpDown,
-        icon: '↕',
         category: 'Layout',
         content: `<div style="height:48px;" aria-hidden="true"></div>`,
     },
@@ -109,7 +100,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-hero-section',
         label: 'Hero Section',
         lucideIcon: PanelsTopLeft,
-        icon: '▣',
         category: 'Layout',
         content: `
             <section style="padding:64px 32px;text-align:center;background:linear-gradient(135deg,#f5f3ff,#eef2ff);border-radius:16px;">
@@ -124,7 +114,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-footer',
         label: 'Footer',
         lucideIcon: PanelBottom,
-        icon: '▤',
         category: 'Layout',
         content: `
             <footer style="padding:32px 24px;background:#202238;color:#fff;border-radius:10px;">
@@ -141,7 +130,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-feature-grid',
         label: '3 Feature Columns',
         lucideIcon: Columns,
-        icon: '▦',
         category: 'Layout',
         content: `
             <section style="padding:36px 20px;">
@@ -166,7 +154,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-navbar',
         label: 'Navigation Bar',
         lucideIcon: Menu,
-        icon: '☰',
         category: 'Navigation',
         content: `
             <nav style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 24px;border-bottom:1px solid #e5e7eb;">
@@ -186,7 +173,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-bullet-list',
         label: 'Unorder List',
         lucideIcon: List,
-        icon: '☷',
         category: 'Content',
         content: `
             <ul style="padding-left:24px;line-height:2;color:#34364a;">
@@ -200,7 +186,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-order-list',
         label: 'Order List',
         lucideIcon: ListOrdered,
-        icon: '☷',
         category: 'Content',
         content: `
             <ol style="padding-left:24px;line-height:2;color:#34364a;">
@@ -214,7 +199,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-quote',
         label: 'Quote',
         lucideIcon: Quote,
-        icon: '❞',
         category: 'Content',
         content: `
             <blockquote style="margin:0;padding:18px 24px;border-left:4px solid #6658e8;background:#f7f6ff;font-size:20px;line-height:1.7;color:#34324d;">
@@ -226,7 +210,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-faq',
         label: 'FAQ Item',
         lucideIcon: CircleHelp,
-        icon: '?',
         category: 'Content',
         content: `
             <details style="padding:18px 20px;border:1px solid #e5e7eb;border-radius:10px;">
@@ -239,7 +222,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-alert',
         label: 'Notice / Alert',
         lucideIcon: CircleHelp,
-        icon: '!',
         category: 'Content',
         content: `
             <div role="note" style="padding:16px 18px;border:1px solid #c7d2fe;border-radius:10px;background:#eef2ff;color:#3730a3;line-height:1.7;">
@@ -252,7 +234,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-badge',
         label: 'Badge',
         lucideIcon: Badge,
-        icon: '●',
         category: 'Content',
         content: `<span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:700;">BARU</span>`,
     },
@@ -262,7 +243,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-video',
         label: 'Video Embed',
         lucideIcon: Play,
-        icon: '▶',
         category: 'Media',
         content: `
             <div style="position:relative;aspect-ratio:16/9;max-width:800px;background:#202238;border-radius:12px;overflow:hidden;">
@@ -274,7 +254,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-image-gallery',
         label: 'Image Gallery',
         lucideIcon: Images,
-        icon: '▧',
         category: 'Media',
         content: `
             <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
@@ -290,7 +269,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-contact-form',
         label: 'Contact Form',
         lucideIcon: Mail,
-        icon: '✉',
         category: 'Form',
         content: `
             <form style="display:grid;gap:14px;max-width:560px;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
@@ -307,7 +285,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-feature-card',
         label: 'Feature Card',
         lucideIcon: Sparkles,
-        icon: '✧',
         category: 'Marketing',
         content: `
             <article style="max-width:320px;padding:24px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;">
@@ -321,7 +298,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-testimonial',
         label: 'Testimonial',
         lucideIcon: MessageSquareQuote,
-        icon: '❝',
         category: 'Marketing',
         content: `
             <blockquote style="margin:0;padding:28px;border-radius:14px;background:#f7f6ff;">
@@ -337,7 +313,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-pricing-card',
         label: 'Pricing Card',
         lucideIcon: CreditCard,
-        icon: '$',
         category: 'Marketing',
         content: `
             <article style="max-width:340px;padding:28px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;">
@@ -353,7 +328,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-statistics',
         label: 'Statistics',
         lucideIcon: ChartNoAxesCombined,
-        icon: '↗',
         category: 'Marketing',
         content: `
             <section style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:28px 20px;text-align:center;background:#f8fafc;border-radius:12px;">
@@ -367,7 +341,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-cta',
         label: 'Call to Action',
         lucideIcon: ArrowRight,
-        icon: '➜',
         category: 'Marketing',
         content: `
             <section style="padding:38px 28px;text-align:center;background:#6658e8;color:#fff;border-radius:16px;">
@@ -381,7 +354,6 @@ export const elementRegistry: EditorBlock[] = [
         id: 'wb-product-card',
         label: 'Product Card',
         lucideIcon: ShoppingBag,
-        icon: '▣',
         category: 'Marketing',
         content: `
             <article style="max-width:300px;overflow:hidden;border:1px solid #e5e7eb;border-radius:14px;background:#fff;">
