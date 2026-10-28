@@ -81,7 +81,7 @@ function WebsiteCard({ website }: { website: Website }) {
         <article className="dashboard-stat dashboard-website-card">
             {editing ? (
                 <form onSubmit={update}>
-                    <label htmlFor={`website-name-${website.id}`}>Nama website</label>
+                    <label htmlFor={`website-name-${website.id}`} className="dashboard-stat__label">Nama website</label>
                     <input
                         id={`website-name-${website.id}`}
                         value={form.data.name}
@@ -90,17 +90,19 @@ function WebsiteCard({ website }: { website: Website }) {
                         required
                     />
                     {form.errors.name && <p role="alert">{form.errors.name}</p>}
-                    <label htmlFor={`website-status-${website.id}`}>Status</label>
-                    <select
-                        id={`website-status-${website.id}`}
-                        value={form.data.status}
-                        onChange={(event) => form.setData('status', event.target.value as Website['status'])}
-                    >
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                    </select>
-                    <button type="submit" disabled={form.processing}>Simpan</button>
-                    <button type="button" onClick={() => setEditing(false)}>Batal</button>
+                    <div className="dashboard-website-actions">
+                        <label htmlFor={`website-status-${website.id}`} className="dashboard-stat__label">Status</label>
+                        <select
+                            id={`website-status-${website.id}`}
+                            value={form.data.status}
+                            onChange={(event) => form.setData('status', event.target.value as Website['status'])}
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                        <button type="submit" className="dashboard-primary-button" disabled={form.processing}>Simpan</button>
+                        <button type="button" className="dashboard-secondary-button" onClick={() => setEditing(false)}>Batal</button>
+                    </div>
                 </form>
             ) : (
                 <>
@@ -109,17 +111,16 @@ function WebsiteCard({ website }: { website: Website }) {
                         <span className="dashboard-count">{website.status}</span>
                     </div>
                     <p className="dashboard-stat__note">/{website.slug}</p>
-                    <div className="dashboard-website-actions">
-                        <Link href={`/websites/${website.id}/editor`} className="dashboard-primary-button">
-                            Buka editor
-                        </Link>
-                        <button type="button" onClick={() => setEditing(true)} className="dashboard-secondary-button">
-                            Edit
-                        </button>
-                        <button type="button" onClick={remove} className="dashboard-secondary-button">
-                            Hapus
-                        </button>
-                    </div>
+                    
+                    <Link href={`/websites/${website.id}/editor`} className="dashboard-primary-button">
+                        Buka editor
+                    </Link>
+                    <button type="button" onClick={() => setEditing(true)} className="dashboard-secondary-button">
+                        Edit
+                    </button>
+                    <button type="button" onClick={remove} className="dashboard-secondary-button">
+                        Hapus
+                    </button>
                 </>
             )}
         </article>

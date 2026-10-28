@@ -55,6 +55,20 @@ class WebsiteController extends Controller
 
         return redirect()->route('websites.editor', $website)->with('success', 'Website berhasil dibuat.');
     }
+    
+    public function saveDraft(Request $request, Website $website): RedirectResponse
+    {
+        $validated = $request->validate([
+            'content' => ['required', 'array'],
+        ]);
+    
+        $website->update([
+            'content' => $validated['content'],
+            'status' => 'draft',
+        ]);
+    
+        return back()->with('success', 'Draft berhasil disimpan.');
+    }
 
     public function update(Request $request, Website $website): RedirectResponse
     {
@@ -80,7 +94,9 @@ class WebsiteController extends Controller
     public function editor(Website $website): Response
     {
         return Inertia::render('editor', [
+            'websiteId' => $website->id,
             'websiteSlug' => $website->slug,
+            'websiteContent' => $website->content,
         ]);
     }
 }

@@ -3,7 +3,7 @@ import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNod
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
 import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
-TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyCenter, AlignHorizontalJustifyStart, AlignHorizontalSpaceAround, AlignHorizontalSpaceBetween, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, AlignVerticalSpaceAround, AlignVerticalSpaceBetween, AlignLeft, AlignCenter, AlignRight, AlignJustify, RotateCcw, StretchVertical } from 'lucide-react';
+TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyCenter, AlignHorizontalJustifyStart, AlignHorizontalSpaceAround, AlignHorizontalSpaceBetween, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, AlignVerticalSpaceAround, AlignVerticalSpaceBetween, AlignLeft, AlignCenter, AlignRight, AlignJustify, RotateCcw, StretchVertical, Save, RotateCw, Send } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful' ;
 import AppSelect from '../components/app-select';
 
@@ -44,6 +44,8 @@ type EditorLayoutProps = {
     collapsedNavigatorIds: ReadonlySet<string>;
     onToggleNavigatorItem: (id: string) => void;
     onAddLayoutPreset: (columns: 1 | 2 | 3 | 4) => void;
+    saveStatus: 'saved' | 'unsaved' | 'saving' | 'error';
+    onSaveDraft: () => void;
 };
 
 export type InspectorStyles = {
@@ -148,7 +150,6 @@ function normalizeColorForPreview(color: string, fallback: string): string {
         }
     }
 
-    // Format yang tidak didukung menggunakan warna cadangan.
     return fallback;
 }
 
@@ -270,6 +271,8 @@ export default function EditorLayout({
     onToggleNavigator,
     collapsedNavigatorIds,
     onToggleNavigatorItem,
+    saveStatus,
+    onSaveDraft,
 }: EditorLayoutProps) {
 
     const [activeMobilePanel, setActiveMobilePanel] = useState<FloatingPanel | null>(null);
@@ -395,14 +398,17 @@ export default function EditorLayout({
                         aria-label="Kembali ke Dashboard"
                         title="Kembali ke Dashboard"
                     >
-                        <ArrowLeft />
+                        <ArrowLeft size={14} strokeWidth={1.8} aria-hidden="true" />
                     </Link>
 
                     <div className="editor-identity">
                         <strong>{websiteName}</strong>
                         <span>
                             <span className="editor-status-dot" />
-                            Draft · Belum tersimpan
+                            {saveStatus === 'saving' && 'Draft · Saving...'}
+                            {saveStatus === 'saved' && 'Draft · Saved'}
+                            {saveStatus === 'error' && 'Draft · Failed'}
+                            {saveStatus === 'unsaved' && 'Draft · Unsaved'}
                         </span>
                     </div>
                 </div>
@@ -416,7 +422,7 @@ export default function EditorLayout({
                         aria-label="Undo"
                         title="Undo (Ctrl+Z)"
                     >
-                        <Undo2 size={14} />Undo
+                        <Undo2 size={14} strokeWidth={1.8} aria-hidden="true" />
                     </button>
                     
                     <button
@@ -427,14 +433,31 @@ export default function EditorLayout({
                         aria-label="Redo"
                         title="Redo (Ctrl+Shift+Z)"
                     >
-                        <Redo2 size={14} /> Redo
+                        <Redo2 size={14} strokeWidth={1.8} aria-hidden="true" />
                     </button>
                     <button
                         type="button"
                         className="editor-button editor-button--subtle"
                         onClick={onTogglePreview}
                     >
-                        {preview ? 'Back to editor' : 'Preview'}
+                        {preview ? (
+                            <ArrowLeft size={14} strokeWidth={1.8} aria-hidden="true" />
+                            ) : (
+                            <Eye size={14} strokeWidth={1.8} aria-hidden="true" />
+                        )}
+                    </button>
+                    
+                    <button
+                        type="button"
+                        className="editor-button editor-button--primary"
+                        onClick={onSaveDraft}
+                        disabled={saveStatus === 'saving'}
+                    >
+                        {saveStatus === 'saving' ? (
+                            <RotateCw size={14} strokeWidth={1.8} aria-hidden="true" />
+                        ) : (
+                            <Save size={14} strokeWidth={1.8} aria-hidden="true" />
+                        )}
                     </button>
 
                     <button
@@ -443,7 +466,7 @@ export default function EditorLayout({
                         disabled
                         title="Publikasi akan tersedia setelah fitur penyimpanan dibuat"
                     >
-                        Publish
+                        <Send size={14} strokeWidth={1.8} aria-hidden="true" />
                     </button>
                 </div>
             </header>
@@ -600,7 +623,7 @@ export default function EditorLayout({
                                         onChange={(event) =>
                                             onSearchChange(event.target.value)
                                         }
-                                        placeholder="Cari elemen..."
+                                        placeholder="Search element..."
                                         aria-label="Cari elemen"
                                     />
                                 </label>
@@ -705,9 +728,9 @@ export default function EditorLayout({
                 <main className="editor-canvas-area">
                     {!preview && (
                         <div className="editor-canvas-toolbar">
-                            <span>Halaman utama</span>
+                            <span>Main page</span>
                             <span className="editor-canvas-size">
-                                Editor visual
+                                Visual editor
                             </span>
                         </div>
                     )}

@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import grapesjs, { type Component, type Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -7,7 +7,9 @@ import { elementCategories, elementRegistry, type EditorBlock } from '../lib/web
 import '../../css/editor.scss';
 
 type EditorPageProps = {
+    websiteId: number;
     websiteSlug: string;
+    websiteContent: Record<string, unknown> | null;
 };
 
 const emptyStyles: InspectorStyles = {
@@ -160,7 +162,10 @@ function createLayoutMarkup(columns: 1 | 2 | 3 | 4): string {
     `;
 }
 
-export default function EditorPage({ websiteSlug }: EditorPageProps) {
+export default function EditorPage({ websiteSlug, websiteId, websiteContent }: EditorPageProps) {
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'unsaved' | 'saving' | 'error'>(
+        websiteContent ? 'saved' : 'unsaved',
+    );
     const [blocksOpen, setBlocksOpen] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(true);
     const [preview, setPreview] = useState(false);
@@ -229,6 +234,28 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const syncNavigator = useCallback((editor: Editor) => {
         setNavigatorItems(getNavigatorItems(editor));
     }, []);
+        
+    const saveDraft = useCallback(() => {
+        const editor = editorRef.current;
+    
+        if (!editor) {
+            return;
+        }
+    
+        const content = editor.getProjectData();
+    
+        router.put(`/websites/${websiteId}/draft`, { content }, {
+                preserveScroll: true,
+                onStart: () => setSaveStatus('saving'),
+                onSuccess: () => setSaveStatus('saved'),
+                onError: () => setSaveStatus('error'),
+            },
+        );
+    }, [websiteId]);
+    
+    const markDraftUnsaved = useCallback(() => {
+        setSaveStatus((current) => current === 'saving' ? current : 'unsaved');
+    }, []);
 
     useEffect(() => {
         const container = canvasRef.current;
@@ -245,6 +272,8 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
             // Penyimpanan akan ditambahkan pada tahap berikutnya.
             storageManager: false,
+            
+            projectData: websiteContent ?? undefined,
 
             // Kita menggunakan panel React sendiri.
             panels: {
@@ -436,6 +465,12 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             });
         };
         
+        editor.on('component:add', markDraftUnsaved);
+        editor.on('component:remove', markDraftUnsaved);
+        editor.on('component:update', markDraftUnsaved);
+        editor.on('component:styleUpdate', markDraftUnsaved);
+        editor.on('styleable:change', markDraftUnsaved);
+        
         editor.on('component:add', refreshNavigator);
         editor.on('component:remove', refreshNavigator);
         editor.on('component:drag:end', refreshNavigator);
@@ -552,10 +587,15 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             editor.off('styleable:change', handleStyleableChange);
             editor.off('undo', refreshHistory);
             editor.off('redo', refreshHistory);
+            editor.off('component:add', markDraftUnsaved);
+            editor.off('component:remove', markDraftUnsaved);
+            editor.off('component:update', markDraftUnsaved);
+            editor.off('component:styleUpdate', markDraftUnsaved);
+            editor.off('styleable:change', markDraftUnsaved);
             editor.destroy();
             editorRef.current = null;
         };
-    }, [syncSelection, syncHistory, syncNavigator]);
+    }, [syncSelection, syncHistory, syncNavigator, markDraftUnsaved]);
 
     const addBlock = (block: EditorBlock) => {
         const editor = editorRef.current;
@@ -833,6 +873,8 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                     setNavigatorOpen((open) => !open);
                 }}
                 onAddLayoutPreset={addLayoutPreset}
+                saveStatus={saveStatus}
+                onSaveDraft={saveDraft}
             >
                 <div
                     id="gjs-canvas"

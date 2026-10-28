@@ -3,6 +3,56 @@
 use App\Models\Website;
 use Inertia\Testing\AssertableInertia as Assert;
 
+test('a website draft can be saved and restored in the editor', function () {
+    $website = Website::query()->create([
+        'name' => 'Portfolio',
+        'slug' => 'portfolio',
+        'status' => 'draft',
+    ]);
+
+    $projectData = [
+        'pages' => [
+            [
+                'name' => 'Home',
+                'component' => '<main><h1>My Portfolio</h1></main>',
+            ],
+        ],
+        'styles' => [],
+    ];
+
+    $this->put(route('websites.save-draft', $website), [
+        'content' => $projectData,
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('websites', [
+        'id' => $website->id,
+        'status' => 'draft',
+    ]);
+
+    expect($website->fresh()->content)->toEqual($projectData);
+
+    $this->get(route('websites.editor', $website))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('editor')
+            ->where('websiteId', $website->id)
+            ->where('websiteSlug', 'portfolio')
+            ->where('websiteContent.pages.0.name', 'Home')
+        );
+});
+
+test('saving a draft requires content data', function () {
+    $website = Website::query()->create([
+        'name' => 'Portfolio',
+        'slug' => 'portfolio',
+        'status' => 'draft',
+    ]);
+
+    $this->from(route('websites.editor', $website))
+        ->put(route('websites.save-draft', $website), [])
+        ->assertSessionHasErrors('content');
+});
+
 test('dashboard displays websites from the database', function () {
     Website::query()->create([
         'name' => 'Portfolio',
@@ -78,9 +128,7 @@ test('the editor returns 404 for a website that does not exist', function () {
 });
 
 test('website creation validates the name', function () {
-    $this->from(route('dashboard'))
-        ->post(route('websites.store'), ['name' => ''])
-        ->assertSessionHasErrors('name');
+    $this->from(route('dashboard'))->post(route('websites.store'), ['name' => ''])->assertSessionHasErrors('name');
 
     expect(Website::query()->count())->toBe(0);
 });
