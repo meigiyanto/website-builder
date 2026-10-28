@@ -1,12 +1,22 @@
 <?php
 
-use Inertia\Inertia;
+use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::inertia('/', 'welcome')->name('home');
-Route::inertia('/dashboard', 'dashboard')->name('dashboard');
-Route::get('/websites/{website}/editor', function (string $website) {
-    return Inertia::render('editor', [
-        'websiteSlug' => $website,
-    ]);
-})->name('websites.editor');
+
+Route::get('/dashboard', [WebsiteController::class, 'index'])
+    ->name('dashboard');
+
+Route::post('/websites', [WebsiteController::class, 'store'])
+    ->name('websites.store');
+
+Route::patch('/websites/{website}', [WebsiteController::class, 'update'])
+    ->name('websites.update');
+
+Route::delete('/websites/{website}', [WebsiteController::class, 'destroy'])
+    ->name('websites.destroy');
+
+Route::get('/websites/{website}/editor', [WebsiteController::class, 'editor'])
+    ->name('websites.editor');
