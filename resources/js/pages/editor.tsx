@@ -35,6 +35,9 @@ const emptyStyles: InspectorStyles = {
     margin: '',
     padding: '',
     borderRadius: '',
+    borderWidth: '',
+    borderStyle: '',
+    borderColor: '',
 };
 
 function getNavigatorItems(editor: Editor): NavigatorItem[] {
@@ -91,8 +94,7 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
     const tagName = String(selected.get('tagName') || 'div').toLowerCase();
     const element = selected.getEl();
     const view = element?.ownerDocument?.defaultView;
-    const computedStyles =
-        element && view ? view.getComputedStyle(element) : null;
+    const computedStyles = element && view ? view.getComputedStyle(element) : null;
 
     const editableTags = [
         'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -131,11 +133,14 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
         justifyContent: readStyle('justify-content', 'justifyContent'),
         alignItems: readStyle('align-items', 'alignItems'),
         gap: readStyle('gap', 'gap'),
-        width: readStyle('width', 'width'),
+        width: isLayoutColumn(selected) ? String(attributes['data-wb-width'] || '') : readStyle('width', 'width'),
         maxWidth: readStyle('max-width', 'maxWidth'),
         margin: readStyle('margin', 'margin'),
         padding: readStyle('padding', 'padding'),
         borderRadius: readStyle('border-radius', 'borderRadius'),
+        borderWidth: readStyle('border-width', 'borderWidth'),
+        borderStyle: readStyle('border-style', 'borderStyle'),
+        borderColor: readStyle('border-color', 'borderColor'),
     };
 }
 
@@ -160,6 +165,87 @@ function createLayoutMarkup(columns: 1 | 2 | 3 | 4): string {
             </div>
         </section>
     `;
+}
+
+function canContainComponents(component: Component): boolean {
+    const tagName = String(component.get('tagName') || '').toLowerCase();
+    const voidTags = new Set([
+        'area', 'base', 'br', 'col', 'embed', 'hr', 'img',
+        'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+    ]);
+
+    return component.get('droppable') !== false && !voidTags.has(tagName);
+}
+
+function isLayoutColumn(component: Component): boolean {
+    const className = String(component.getAttributes().class || '');
+
+    return className.split(/\s+/).includes('wb-layout-column');
+}
+
+function updateLayoutColumnWidths(parent: Component): void {
+    const components = parent.components().models as Component[];
+
+    const columns = components.filter((component: Component) =>
+        isLayoutColumn(component),
+    );
+
+    if (columns.length === 0) {
+        return;
+    }
+
+    const explicitWidths: (number | null)[] = columns.map(
+        (column: Component): number | null => {
+            const value = String(
+                column.getAttributes()['data-wb-width'] || '',
+            ).trim();
+
+            if (!/^\d+(?:\.\d+)?%$/.test(value)) {
+                return null;
+            }
+
+            const width = Number.parseFloat(value);
+
+            return Number.isFinite(width) && width > 0 && width <= 100
+                ? width
+                : null;
+        },
+    );
+
+    const specifiedTotal = explicitWidths.reduce<number>(
+        (total, width) => total + (width ?? 0),
+        0,
+    );
+
+    const unspecifiedCount = explicitWidths.filter(
+        (width) => width === null,
+    ).length;
+
+    const remaining = Math.max(0, 100 - specifiedTotal);
+
+    const automaticWidth =
+        unspecifiedCount > 0 ? remaining / unspecifiedCount : 0;
+
+    const widths = explicitWidths.map(
+        (width) => width ?? automaticWidth,
+    );
+
+    const total = widths.reduce<number>(
+        (sum, width) => sum + width,
+        0,
+    );
+
+    const normalizedWidths =
+        total > 100
+            ? widths.map((width) => (width / total) * 100)
+            : widths;
+
+    parent.setStyle({
+        ...parent.getStyle(),
+        'grid-template-columns': normalizedWidths
+            .map((width) => `minmax(0, ${width}fr)`)
+            .join(' '),
+    });
 }
 
 export default function EditorPage({ websiteSlug, websiteId, websiteContent }: EditorPageProps) {
@@ -599,15 +685,24 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
 
     const addBlock = (block: EditorBlock) => {
         const editor = editorRef.current;
+        const wrapper = editor?.getWrapper();
     
-        if (!editor) return;
+        if (!editor || !wrapper) return;
     
-        const added = editor.addComponents(block.content);
-        const component = added.at(0);
+        const selected = editor.getSelected();
+    
+        const target = selected && canContainComponents(selected)
+            ? selected
+            : selected?.parent() ?? wrapper;
+    
+        const added = target.append(block.content);
+        const component = added[0];
     
         if (component) {
             editor.select(component);
             syncSelection(editor);
+            syncNavigator(editor);
+            syncHistory(editor);
         }
     };
 
@@ -630,6 +725,37 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             syncSelection(editor);
             return;
         }
+        
+        if (property === 'width' && isLayoutColumn(selected)) {
+            const parent = selected.parent();
+        
+            if (!parent) {
+                return;
+            }
+        
+            const normalizedValue = value.trim();
+        
+            if (normalizedValue === '') {
+                selected.removeAttributes('data-wb-width');
+            } else {
+                const validWidth =
+                    /^(?:\d+(?:\.\d+)?%|\d+(?:\.\d+)?px)$/.test(
+                        normalizedValue,
+                    );
+        
+                if (!validWidth) {
+                    return;
+                }
+        
+                selected.addAttributes({
+                    'data-wb-width': normalizedValue,
+                });
+            }
+        
+            updateLayoutColumnWidths(parent);
+            syncSelection(editor);
+            return;
+        }
     
         const cssProperties: Partial<Record<InspectorProperty, string>> = {
             color: 'color',
@@ -649,6 +775,9 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             margin: 'margin',
             padding: 'padding',
             borderRadius: 'border-radius',
+            borderWidth: 'border-width',
+            borderStyle: 'border-style',
+            borderColor: 'border-color',
         };
     
         const cssProperty = cssProperties[property];

@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
-import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
+import { Palette, ArrowLeft, Eye, EyeOff, Undo, Undo2, Redo2, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
 TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyCenter, AlignHorizontalJustifyStart, AlignHorizontalSpaceAround, AlignHorizontalSpaceBetween, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, AlignVerticalSpaceAround, AlignVerticalSpaceBetween, AlignLeft, AlignCenter, AlignRight, AlignJustify, RotateCcw, StretchVertical, Save, RotateCw, Send } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful' ;
 import AppSelect from '../components/app-select';
@@ -71,6 +71,9 @@ export type InspectorStyles = {
     margin: string;
     padding: string;
     borderRadius: string;
+    borderWidth: string;
+    borderStyle: string;
+    borderColor: string;
 };
 
 export type NavigatorItem = {
@@ -104,7 +107,10 @@ export type InspectorProperty =
     | 'maxWidth'
     | 'margin'
     | 'padding'
-    | 'borderRadius';
+    | 'borderRadius'
+    | 'borderWidth'
+    | 'borderStyle'
+    | 'borderColor';
 
 
 function normalizeColorForPreview(color: string, fallback: string): string {
@@ -441,7 +447,7 @@ export default function EditorLayout({
                         onClick={onTogglePreview}
                     >
                         {preview ? (
-                            <ArrowLeft size={14} strokeWidth={1.8} aria-hidden="true" />
+                            <EyeOff size={14} strokeWidth={1.8} aria-hidden="true" />
                             ) : (
                             <Eye size={14} strokeWidth={1.8} aria-hidden="true" />
                         )}
@@ -1059,6 +1065,51 @@ export default function EditorLayout({
                                                     fallback="#ffffff"
                                                     placeholder="#ffffff atau transparent"
                                                     onChange={onStyleChange}
+                                                />
+                                            </label>
+                                        </section>
+                                        
+                                        <section className="editor-inspector-section">
+                                            <p className="editor-inspector-section__title">Border</p>
+                                        
+                                            <label className="editor-field">
+                                                <span>Border width</span>
+                                                <input
+                                                    type="text"
+                                                    value={styles.borderWidth}
+                                                    placeholder="1px"
+                                                    onChange={(event) =>
+                                                        onStyleChange('borderWidth', event.target.value)
+                                                    }
+                                                />
+                                            </label>
+                                        
+                                            <label className="editor-field">
+                                                <span>Border style</span>
+                                                <AppSelect
+                                                    value={styles.borderStyle}
+                                                    options={[
+                                                        { value: '', label: 'Default' },
+                                                        { value: 'solid', label: 'Solid' },
+                                                        { value: 'dashed', label: 'Dashed' },
+                                                        { value: 'dotted', label: 'Dotted' },
+                                                        { value: 'double', label: 'Double' },
+                                                        { value: 'none', label: 'None' },
+                                                    ]}
+                                                    onChange={(value) => onStyleChange('borderStyle', value)}
+                                                    ariaLabel="Border style"
+                                                />
+                                            </label>
+                                        
+                                            <label className="editor-field">
+                                                <span>Border color</span>
+                                                <input
+                                                    type="text"
+                                                    value={styles.borderColor}
+                                                    placeholder="#e5e7eb"
+                                                    onChange={(event) =>
+                                                        onStyleChange('borderColor', event.target.value)
+                                                    }
                                                 />
                                             </label>
                                         </section>
