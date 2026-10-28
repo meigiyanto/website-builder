@@ -2,10 +2,12 @@ import { Link } from '@inertiajs/react';
 import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
-import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, AlignLeft, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
-TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter } from 'lucide-react';
+import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
+TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyCenter, AlignHorizontalJustifyStart, AlignHorizontalSpaceAround, AlignHorizontalSpaceBetween, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, AlignVerticalSpaceAround, AlignVerticalSpaceBetween, AlignLeft, AlignCenter, AlignRight, AlignJustify, RotateCcw, StretchVertical } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful' ;
 import AppSelect from '../components/app-select';
+
+import InspectorIconToggleGroup from '../components/inspector-icon-toggle-group';
 
 type EditorLayoutProps = {
     children: ReactNode;
@@ -207,9 +209,7 @@ function ColorPickerField({
                     aria-label={`Nilai warna: ${label}`}
                     value={value}
                     placeholder={placeholder}
-                    onChange={(event) =>
-                        onChange(property, event.target.value)
-                    }
+                    onChange={(event) => onChange(property, event.target.value)}
                 />
             </div>
 
@@ -217,9 +217,7 @@ function ColorPickerField({
                 <div className="editor-color-picker-popover">
                     <HexColorPicker
                         color={pickerColor}
-                        onChange={(nextColor) =>
-                            onChange(property, nextColor)
-                        }
+                        onChange={(nextColor) => onChange(property, nextColor)}
                     />
 
                     <div className="editor-color-picker-footer">
@@ -634,11 +632,7 @@ export default function EditorLayout({
                                                 onClick={() => onAddLayoutPreset(columns)}
                                                 onDragStart={(event) => {
                                                     event.dataTransfer.effectAllowed = 'copy';
-                                            
-                                                    onBlockDragStart(
-                                                        `wb-layout-${columns}`,
-                                                        event.nativeEvent,
-                                                    );
+                                                    onBlockDragStart(`wb-layout-${columns}`, event.nativeEvent,);
                                                 }}
                                                 onDrag={(event) => {
                                                     onBlockDrag(event.nativeEvent);
@@ -819,7 +813,7 @@ export default function EditorLayout({
                                                         { value: 'grid', label: 'Grid' },
                                                         { value: 'none', label: 'None' },
                                                     ]}
-                                                    onChange={(event) => onStyleChange('display', event.target.value)}
+                                                    onChange={(value) => onStyleChange('display', value)}
                                                     ariaLabel="Display"
                                                 />
                                             </label>
@@ -837,43 +831,88 @@ export default function EditorLayout({
                                                                 { value: 'row-reverse', label: 'Horizontal Reverse' },
                                                                 { value: 'column-reverse', label: 'Vertical Reverse' },
                                                             ]}
-                                                            onChange={(event) => onStyleChange('flexDirection', event.target.value)}
+                                                            onChange={(value) => onStyleChange('flexDirection', value)}
                                                             ariaLabel="Flex Direction"
                                                         />
                                                     </label>
                                     
                                                     <label className="editor-field">
                                                         <span>Justify Content</span>
-                                                        <select
-                                                            value={styles.justifyContent}
-                                                            onChange={(event) =>
-                                                                onStyleChange('justifyContent', event.target.value)
-                                                            }
-                                                        >
-                                                            <option value="">Default</option>
-                                                            <option value="flex-start">Start</option>
-                                                            <option value="center">Center</option>
-                                                            <option value="flex-end">End</option>
-                                                            <option value="space-between">Space between</option>
-                                                            <option value="space-around">Space around</option>
-                                                        </select>
-                                                        
+                                                        <InspectorIconToggleGroup
+                                                            ariaLabel="Justify Content"
+                                                            value={styles.justifyContent ?? ''}
+                                                            onChange={(value) => onStyleChange('justifyContent', value)}
+                                                            options={[
+                                                                { value: '', label: 'Default', icon: RotateCcw },
+                                                                {
+                                                                    value: 'flex-start',
+                                                                    label: 'Start',
+                                                                    icon: AlignHorizontalJustifyStart,
+                                                                },
+                                                                {
+                                                                    value: 'center',
+                                                                    label: 'Center',
+                                                                    icon: AlignHorizontalJustifyCenter,
+                                                                },
+                                                                {
+                                                                    value: 'flex-end',
+                                                                    label: 'End',
+                                                                    icon: AlignHorizontalJustifyEnd,
+                                                                },
+                                                                {
+                                                                    value: 'space-between',
+                                                                    label: 'Between',
+                                                                    icon: AlignHorizontalSpaceBetween,
+                                                                },
+                                                                {
+                                                                    value: 'space-around',
+                                                                    label: 'Around',
+                                                                    icon: AlignHorizontalSpaceAround,
+                                                                },
+                                                            ]}
+                                                        />
                                                     </label>
                                     
                                                     <label className="editor-field">
                                                         <span>Align Items</span>
-                                                        <select
-                                                            value={styles.alignItems}
-                                                            onChange={(event) =>
-                                                                onStyleChange('alignItems', event.target.value)
-                                                            }
-                                                        >
-                                                            <option value="">Default</option>
-                                                            <option value="stretch">Stretch</option>
-                                                            <option value="flex-start">Start</option>
-                                                            <option value="center">Center</option>
-                                                            <option value="flex-end">End</option>
-                                                        </select>
+                                                        <InspectorIconToggleGroup
+                                                            ariaLabel="Align Items"
+                                                            value={styles.alignItems ?? ''}
+                                                            onChange={(value) => onStyleChange('alignItems', value)}
+                                                            options={[
+                                                                { value: '', label: 'Default', icon: RotateCcw },
+                                                                {
+                                                                    value: 'flex-start',
+                                                                    label: 'Start',
+                                                                    icon: AlignVerticalJustifyStart,
+                                                                },
+                                                                {
+                                                                    value: 'center',
+                                                                    label: 'Center',
+                                                                    icon: AlignVerticalJustifyCenter,
+                                                                },
+                                                                {
+                                                                    value: 'flex-end',
+                                                                    label: 'End',
+                                                                    icon: AlignVerticalJustifyEnd,
+                                                                },
+                                                                {
+                                                                    value: 'stretch',
+                                                                    label: 'Stretch',
+                                                                    icon: StretchVertical,
+                                                                },
+                                                                {
+                                                                    value: 'space-between',
+                                                                    label: 'Between',
+                                                                    icon: AlignVerticalSpaceBetween,
+                                                                },
+                                                                {
+                                                                    value: 'space-around',
+                                                                    label: 'Around',
+                                                                    icon: AlignVerticalSpaceAround,
+                                                                },
+                                                            ]}
+                                                        />
                                                     </label>
                                                 </>
                                             )}
@@ -911,7 +950,7 @@ export default function EditorLayout({
                                                         { value: 'Verdana, serif', label: 'Verdana' },
                                                         { value: 'monospace', label: 'Monospace' },
                                                     ]}
-                                                    onChange={(event) => onStyleChange('fontFamily', event.target.value)}
+                                                    onChange={(value) => onStyleChange('fontFamily', value)}
                                                     ariaLabel="Font Family"
                                                 />
                                             </label>
@@ -941,7 +980,7 @@ export default function EditorLayout({
                                                         { value: '700', label: 'Bold' },
                                                         { value: '800', label: 'Extra-bold' },
                                                     ]}
-                                                    onChange={(event) => onStyleChange('fontWeight', event.target.value)}
+                                                    onChange={(value) => onStyleChange('fontWeight', value)}
                                                     ariaLabel="Font Weight"
                                                 />
                                             </label>
@@ -960,19 +999,18 @@ export default function EditorLayout({
                                     
                                             <label className="editor-field">
                                                 <span>Text alignment</span>
-                                                <select
-                                                    value={styles.textAlign}
-                                                    onChange={(event) =>
-                                                        onStyleChange('textAlign', event.target.value)
-                                                    }
-                                                >
-                                                    <option value="">Default</option>
-                                                    <option value="left">Left</option>
-                                                    <option value="center">Center</option>
-                                                    <option value="right">Right</option>
-                                                    <option value="justify">Justify</option>
-                                                </select>
-                                                
+                                                <InspectorIconToggleGroup
+                                                    ariaLabel="Text Alignment"
+                                                    value={styles.textAlign ?? ''}
+                                                    onChange={(value) => onStyleChange('textAlign', value)}
+                                                    options={[
+                                                        { value: '', label: 'Default', icon: RotateCcw },
+                                                        { value: 'left', label: 'Left', icon: AlignLeft },
+                                                        { value: 'center', label: 'Center', icon: AlignCenter },
+                                                        { value: 'right', label: 'Right', icon: AlignRight },
+                                                        { value: 'justify', label: 'Justify', icon: AlignJustify },
+                                                    ]}
+                                                />
                                             </label>
                                         </section>
                                     

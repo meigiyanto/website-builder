@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Type, AlignLeft, Image, Columns, MousePointerClick, Square, Columns3, Minus, ArrowUpDown, PanelsTopLeft, PanelBottom, LayoutGrid, Menu, ListOrdered, List, Quote, CircleHelp, TriangleAlert, BadgeCheck, Play, Images, Mail, Sparkles, MessageSquareQuote, CreditCard, ChartNoAxesCombined, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Type, AlignLeft, Image, Columns, MousePointerClick, Square, Columns3, Minus, ArrowUpDown, PanelsTopLeft, PanelBottom, LayoutGrid, Menu, ListOrdered, List, Quote, CircleHelp, TriangleAlert, BadgeCheck, Play, Images, Mail, Sparkles, MessageSquareQuote, CreditCard, ChartNoAxesCombined, ArrowRight, ShoppingBag, Table } from 'lucide-react';
 
 
 export type ElementCategory =
@@ -168,7 +168,7 @@ export const elementRegistry: EditorBlock[] = [
         `,
     },
 
-    /* Content 5 block */
+    /* Content 6 block */
     {
         id: 'wb-bullet-list',
         label: 'Unorder List',
@@ -194,6 +194,42 @@ export const elementRegistry: EditorBlock[] = [
                 <li>Poin keunggulan ketiga</li>
             </ol>
         `,
+    },
+    {
+        id: 'wb-table',
+        label: 'Table',
+        lucideIcon: Table,
+        category: 'Content',
+        content: `
+            <div style="width:100%;overflow-x:auto;margin:0 0 20px;">
+                <table style="width:100%;border-collapse:collapse;text-align:left;font-size:14px;color:#34364a;">
+                    <thead>
+                        <tr style="background:#f4f5f9;">
+                            <th scope="col" style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:700;">Nama</th>
+                            <th scope="col" style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:700;">Kategori</th>
+                            <th scope="col" style="padding:12px 16px;border:1px solid #e5e7eb;font-weight:700;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Produk A</td>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Elektronik</td>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Aktif</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Produk B</td>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Aksesori</td>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Aktif</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Produk C</td>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Peralatan</td>
+                            <td style="padding:12px 16px;border:1px solid #e5e7eb;">Draft</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+    `,
     },
     {
         id: 'wb-quote',
