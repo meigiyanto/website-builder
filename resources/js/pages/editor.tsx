@@ -1,347 +1,80 @@
 import { Head } from '@inertiajs/react';
-import grapesjs, { type Editor } from 'grapesjs';
+import grapesjs, { type Component, type Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import EditorLayout, { type EditorBlock, type InspectorStyles } from '../layouts/editor-layout';
+import EditorLayout, { type InspectorProperty, type InspectorStyles, type NavigatorItem } from '../layouts/editor-layout';
+import { elementCategories, elementRegistry, type EditorBlock } from '../lib/website-builder/element-registry';
 import '../../css/editor.scss';
 
 type EditorPageProps = {
     websiteSlug: string;
 };
 
-const blocks: EditorBlock[] = [
-    /* Layout 5 block */
-    {
-        id: 'wb-divider',
-        label: 'Divider',
-        icon: '―',
-        category: 'Layout',
-        content: `<hr style="border:0;border-top:1px solid #e5e7eb;margin:24px 0;" />`,
-    },
-    {
-        id: 'wb-spacer',
-        label: 'Spacer',
-        icon: '↕',
-        category: 'Layout',
-        content: `<div style="height:48px;" aria-hidden="true"></div>`,
-    },
-    {
-        id: 'wb-hero-section',
-        label: 'Hero Section',
-        icon: '▣',
-        category: 'Layout',
-        content: `
-            <section style="padding:64px 32px;text-align:center;background:linear-gradient(135deg,#f5f3ff,#eef2ff);border-radius:16px;">
-                <p style="color:#6658e8;font-size:12px;font-weight:700;letter-spacing:1.5px;">KENALI PRODUK KAMI</p>
-                <h1 style="max-width:720px;margin:0 auto 16px;font-size:42px;line-height:1.15;color:#24263a;">Bangun ide besar Anda di sini</h1>
-                <p style="max-width:560px;margin:0 auto 24px;color:#666b80;line-height:1.8;">Jelaskan manfaat utama produk atau layanan Anda.</p>
-                <a href="#" style="display:inline-block;padding:13px 22px;border-radius:8px;background:#6658e8;color:#fff;text-decoration:none;font-weight:700;">Mulai Sekarang</a>
-            </section>
-        `,
-    },
-    {
-        id: 'wb-footer',
-        label: 'Footer',
-        icon: '▤',
-        category: 'Layout',
-        content: `
-            <footer style="padding:32px 24px;background:#202238;color:#fff;border-radius:10px;">
-                <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;">
-                    <div><strong style="font-size:20px;">Brand Anda</strong><p style="max-width:320px;color:#c7c8d5;line-height:1.7;">Solusi praktis untuk kebutuhan Anda.</p></div>
-                    <div><strong>Jelajahi</strong><p><a href="#" style="color:#c7c8d5;">Tentang Kami</a></p><p><a href="#" style="color:#c7c8d5;">Kontak</a></p></div>
-                </div>
-                <hr style="border:0;border-top:1px solid #44465b;margin:24px 0 16px;" />
-                <small style="color:#c7c8d5;">© 2026 Brand Anda. Hak cipta dilindungi.</small>
-            </footer>
-        `,
-    },
-    {
-        id: 'wb-feature-grid',
-        label: '3 Feature Columns',
-        icon: '▦',
-        category: 'Layout',
-        content: `
-            <section style="padding:36px 20px;">
-                <h2 style="text-align:center;font-size:30px;">Mengapa memilih kami?</h2>
-                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;">
-                    <article style="padding:22px;border:1px solid #e5e7eb;border-radius:12px;">
-                        <strong style="font-size:24px;">01</strong><h3>Praktis</h3><p>Mudah digunakan setiap hari.</p>
-                    </article>
-                    <article style="padding:22px;border:1px solid #e5e7eb;border-radius:12px;">
-                        <strong style="font-size:24px;">02</strong><h3>Cepat</h3><p>Hemat waktu dan tenaga.</p>
-                    </article>
-                    <article style="padding:22px;border:1px solid #e5e7eb;border-radius:12px;">
-                        <strong style="font-size:24px;">03</strong><h3>Terpercaya</h3><p>Fokus pada kualitas.</p>
-                    </article>
-                </div>
-            </section>
-        `,
-    },
-
-    /* Navigasi 1 block */
-    {
-        id: 'wb-navbar',
-        label: 'Navigation Bar',
-        icon: '☰',
-        category: 'Navigasi',
-        content: `
-            <nav style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 24px;border-bottom:1px solid #e5e7eb;">
-                <strong style="font-size:20px;">Brand Anda</strong>
-                <div style="display:flex;flex-wrap:wrap;gap:18px;">
-                    <a href="#" style="color:#24263a;text-decoration:none;">Beranda</a>
-                    <a href="#" style="color:#24263a;text-decoration:none;">Tentang</a>
-                    <a href="#" style="color:#24263a;text-decoration:none;">Layanan</a>
-                    <a href="#" style="color:#24263a;text-decoration:none;">Kontak</a>
-                </div>
-            </nav>
-        `,
-    },
-
-    /* Konten 5 block */
-    {
-        id: 'wb-bullet-list',
-        label: 'Bullet List',
-        icon: '☷',
-        category: 'Konten',
-        content: `
-            <ul style="padding-left:24px;line-height:2;color:#34364a;">
-                <li>Poin keunggulan pertama</li>
-                <li>Poin keunggulan kedua</li>
-                <li>Poin keunggulan ketiga</li>
-            </ul>
-        `,
-    },
-    {
-        id: 'wb-quote',
-        label: 'Quote',
-        icon: '❞',
-        category: 'Konten',
-        content: `
-            <blockquote style="margin:0;padding:18px 24px;border-left:4px solid #6658e8;background:#f7f6ff;font-size:20px;line-height:1.7;color:#34324d;">
-                “Ide yang baik layak mendapatkan pengalaman digital yang hebat.”
-            </blockquote>
-        `,
-    },
-    {
-        id: 'wb-faq',
-        label: 'FAQ Item',
-        icon: '?',
-        category: 'Konten',
-        content: `
-            <details style="padding:18px 20px;border:1px solid #e5e7eb;border-radius:10px;">
-                <summary style="cursor:pointer;font-weight:700;">Bagaimana cara memulai?</summary>
-                <p style="margin-top:14px;color:#666b80;line-height:1.7;">Daftar akun, pilih paket yang sesuai, lalu ikuti panduan untuk memulai.</p>
-            </details>
-        `,
-    },
-    {
-        id: 'wb-alert',
-        label: 'Notice / Alert',
-        icon: '!',
-        category: 'Konten',
-        content: `
-            <div role="note" style="padding:16px 18px;border:1px solid #c7d2fe;border-radius:10px;background:#eef2ff;color:#3730a3;line-height:1.7;">
-                <strong>Informasi penting</strong>
-                <div>Tambahkan pengumuman atau informasi yang perlu diketahui pengunjung.</div>
-            </div>
-        `,
-    },
-    {
-        id: 'wb-badge',
-        label: 'Badge',
-        icon: '●',
-        category: 'Konten',
-        content: `<span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:700;">BARU</span>`,
-    },
-
-    /* Media 2 block */
-    {
-        id: 'wb-video',
-        label: 'Video Embed',
-        icon: '▶',
-        category: 'Media',
-        content: `
-            <div style="position:relative;aspect-ratio:16/9;max-width:800px;background:#202238;border-radius:12px;overflow:hidden;">
-                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Video demo" style="width:100%;height:100%;border:0;" allowfullscreen></iframe>
-            </div>
-        `,
-    },
-    {
-        id: 'wb-image-gallery',
-        label: 'Image Gallery',
-        icon: '▧',
-        category: 'Media',
-        content: `
-            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
-                <img src="https://placehold.co/400x300?text=Image+1" alt="Galeri gambar 1" style="width:100%;height:180px;object-fit:cover;border-radius:8px;" />
-                <img src="https://placehold.co/400x300?text=Image+2" alt="Galeri gambar 2" style="width:100%;height:180px;object-fit:cover;border-radius:8px;" />
-                <img src="https://placehold.co/400x300?text=Image+3" alt="Galeri gambar 3" style="width:100%;height:180px;object-fit:cover;border-radius:8px;" />
-            </div>
-        `,
-    },
-
-    /* Formulir 1 block */
-    {
-        id: 'wb-contact-form',
-        label: 'Contact Form',
-        icon: '✉',
-        category: 'Formulir',
-        content: `
-            <form style="display:grid;gap:14px;max-width:560px;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
-                <label style="display:grid;gap:6px;">Nama<input type="text" placeholder="Nama Anda" style="padding:12px;border:1px solid #d7d9e2;border-radius:8px;" /></label>
-                <label style="display:grid;gap:6px;">Email<input type="email" placeholder="nama@email.com" style="padding:12px;border:1px solid #d7d9e2;border-radius:8px;" /></label>
-                <label style="display:grid;gap:6px;">Pesan<textarea rows="4" placeholder="Tulis pesan Anda" style="padding:12px;border:1px solid #d7d9e2;border-radius:8px;"></textarea></label>
-                <button type="button" style="padding:12px 18px;border:0;border-radius:8px;background:#6658e8;color:#fff;font-weight:700;">Kirim Pesan</button>
-            </form>
-        `,
-    },
-    
-    /* Basic 6 block */
-    {
-        id: 'wb-heading',
-        label: 'Heading',
-        icon: 'T',
-        category: 'Basic',
-        content:
-            '<h1 style="font-size:36px;font-weight:700;margin:0 0 16px;">Judul halaman</h1>',
-    },
-    {
-        id: 'wb-text',
-        label: 'Text',
-        icon: '¶',
-        category: 'Basic',
-        content:
-            '<p style="font-size:16px;line-height:1.7;margin:0 0 16px;">Tambahkan teks deskriptif di sini.</p>',
-    },
-    {
-        id: 'wb-image',
-        label: 'Image',
-        icon: '▧',
-        category: 'Basic',
-        content:
-            '<img src="https://placehold.co/960x420?text=Your+Image" alt="Gambar" style="display:block;width:100%;height:auto;border-radius:8px;" />',
-    },
-    {
-        id: 'wb-button',
-        label: 'Button',
-        icon: '▱',
-        category: 'Basic',
-        content:
-            '<a href="#" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#6658e8;color:#ffffff;text-decoration:none;font-weight:600;">Pelajari lebih lanjut</a>',
-    },
-    {
-        id: 'wb-container',
-        label: 'Container',
-        icon: '▦',
-        category: 'Basic',
-        content:
-            '<section style="padding:32px;margin:0 0 16px;background:#f4f5f9;border-radius:12px;"><h2 style="margin:0 0 12px;">Bagian baru</h2><p style="margin:0;line-height:1.7;">Konten bagian ini.</p></section>',
-    },
-    {
-        id: 'wb-columns',
-        label: 'Columns',
-        icon: '↔',
-        category: 'Basic',
-        content:
-            '<div style="display:flex;gap:20px;align-items:flex-start;margin:0 0 20px;"><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom satu</div><div style="flex:1;min-width:0;padding:20px;background:#f4f5f9;border-radius:8px;">Kolom dua</div></div>',
-    },
-    
-    /* Marketing 6 block */
-    {
-        id: 'wb-feature-card',
-        label: 'Feature Card',
-        icon: '✧',
-        category: 'Marketing',
-        content: `
-            <article style="max-width:320px;padding:24px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;">
-                <div style="display:grid;place-items:center;width:48px;height:48px;margin-bottom:18px;border-radius:12px;background:#f0edff;color:#6658e8;font-size:24px;">✦</div>
-                <h3 style="margin:0 0 10px;font-size:20px;">Fitur unggulan</h3>
-                <p style="margin:0;color:#666b80;line-height:1.7;">Jelaskan manfaat fitur ini bagi pengguna.</p>
-            </article>
-        `,
-    },
-    {
-        id: 'wb-testimonial',
-        label: 'Testimonial',
-        icon: '❝',
-        category: 'Marketing',
-        content: `
-            <blockquote style="margin:0;padding:28px;border-radius:14px;background:#f7f6ff;">
-                <p style="font-size:20px;line-height:1.7;color:#34324d;">“Layanan yang sangat membantu dan mudah digunakan. Pengalaman kami menjadi jauh lebih baik.”</p>
-                <footer style="display:flex;align-items:center;gap:12px;">
-                    <img src="https://placehold.co/56x56?text=AN" alt="Foto pelanggan" style="width:56px;height:56px;border-radius:50%;object-fit:cover;" />
-                    <div><strong>Andi Nugraha</strong><div style="margin-top:4px;color:#777b8e;font-size:13px;">Pelanggan</div></div>
-                </footer>
-            </blockquote>
-        `,
-    },
-    {
-        id: 'wb-pricing-card',
-        label: 'Pricing Card',
-        icon: '$',
-        category: 'Marketing',
-        content: `
-            <article style="max-width:340px;padding:28px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;">
-                <p style="color:#6658e8;font-weight:700;">PAKET STARTER</p>
-                <h2 style="font-size:32px;">Rp99.000 <small style="font-size:14px;font-weight:400;">/ bulan</small></h2>
-                <p style="color:#666b80;line-height:1.7;">Cocok untuk memulai proyek Anda.</p>
-                <ul style="padding-left:20px;line-height:2;"><li>Fitur dasar</li><li>Dukungan standar</li><li>Pembaruan rutin</li></ul>
-                <a href="#" style="display:block;padding:12px;text-align:center;border-radius:8px;background:#6658e8;color:#fff;text-decoration:none;font-weight:700;">Pilih Paket</a>
-            </article>
-        `,
-    },
-    {
-        id: 'wb-statistics',
-        label: 'Statistics',
-        icon: '↗',
-        category: 'Marketing',
-        content: `
-            <section style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:28px 20px;text-align:center;background:#f8fafc;border-radius:12px;">
-                <div><strong style="display:block;font-size:34px;color:#6658e8;">10K+</strong><span>Pengguna</span></div>
-                <div><strong style="display:block;font-size:34px;color:#6658e8;">98%</strong><span>Kepuasan</span></div>
-                <div><strong style="display:block;font-size:34px;color:#6658e8;">24/7</strong><span>Dukungan</span></div>
-            </section>
-        `,
-    },
-
-    {
-        id: 'wb-cta',
-        label: 'Call to Action',
-        icon: '➜',
-        category: 'Marketing',
-        content: `
-            <section style="padding:38px 28px;text-align:center;background:#6658e8;color:#fff;border-radius:16px;">
-                <h2 style="font-size:30px;">Siap memulai proyek Anda?</h2>
-                <p style="max-width:540px;margin:0 auto 22px;line-height:1.7;">Ambil langkah berikutnya dan wujudkan ide Anda hari ini.</p>
-                <a href="#" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#fff;color:#5142d6;text-decoration:none;font-weight:700;">Hubungi Kami</a>
-            </section>
-        `,
-    },
-    {
-        id: 'wb-product-card',
-        label: 'Product Card',
-        icon: '▣',
-        category: 'Marketing',
-        content: `
-            <article style="max-width:300px;overflow:hidden;border:1px solid #e5e7eb;border-radius:14px;background:#fff;">
-                <img src="https://placehold.co/600x420?text=Product" alt="Foto produk" style="display:block;width:100%;height:210px;object-fit:cover;" />
-                <div style="padding:18px;">
-                    <p style="color:#777b8e;font-size:12px;">KATEGORI PRODUK</p>
-                    <h3>Nama Produk</h3>
-                    <strong style="font-size:20px;color:#6658e8;">Rp199.000</strong>
-                    <p style="color:#666b80;line-height:1.6;">Deskripsi singkat produk Anda.</p>
-                    <a href="#" style="display:block;padding:11px;text-align:center;border-radius:8px;background:#6658e8;color:#fff;text-decoration:none;font-weight:700;">Lihat Produk</a>
-                </div>
-            </article>
-        `,
-    },
-];
-
 const emptyStyles: InspectorStyles = {
+    tagName: '',
+    content: '',
+    href: '',
+    canEditContent: false,
+    isLink: false,
     color: '',
     backgroundColor: '',
-    padding: '',
+    fontFamily: '',
     fontSize: '',
+    fontWeight: '',
+    lineHeight: '',
+    textAlign: '',
+    display: '',
+    flexDirection: '',
+    justifyContent: '',
+    alignItems: '',
+    gap: '',
+    width: '',
+    maxWidth: '',
+    margin: '',
+    padding: '',
+    borderRadius: '',
+};
+
+function getNavigatorItems(editor: Editor): NavigatorItem[] {
+    const items: NavigatorItem[] = [];
+    
+    const visit = (parent: Component, depth: number) => {
+        const children = parent.components().models;
+    
+        children.forEach((component, index) => {
+            const tagName = String(
+                component.get('tagName') || 'div',
+            ).toLowerCase();
+    
+            items.push({
+                id: component.getId(),
+                parentId: parent.getId(),
+                label: component.getName() || tagName,
+                tagName,
+                depth,
+                hasChildren: component.components().length > 0,
+                component,
+                canMoveUp: index > 0,
+                canMoveDown: index < children.length - 1,
+            });
+    
+            visit(component, depth + 1);
+        });
+    };
+
+    const wrapper = editor.getWrapper();
+
+    if (wrapper) {
+        visit(wrapper, 0);
+    }
+
+    return items;
+}
+
+type BlockDragHandlers = {
+    start: (blockId: string, event: Event) => void;
+    drag: (event: Event) => void;
+    stop: () => void;
 };
 
 function getSelectedStyles(editor: Editor): InspectorStyles {
@@ -351,44 +84,150 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
         return emptyStyles;
     }
 
-    const current = selected.getStyle() as Record<string, string>;
+    const inlineStyles = selected.getStyle() as Record<string, string>;
+    const attributes = selected.getAttributes() as Record<string, string>;
+    const tagName = String(selected.get('tagName') || 'div').toLowerCase();
+    const element = selected.getEl();
+    const view = element?.ownerDocument?.defaultView;
+    const computedStyles =
+        element && view ? view.getComputedStyle(element) : null;
+
+    const editableTags = [
+        'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'span', 'a', 'button', 'li', 'label', 'strong', 'em',
+    ];
+
+    const canEditContent = selected.components().length === 0 && editableTags.includes(tagName);
+
+    const readStyle = (cssProperty: string, camelCaseProperty: string,): string => {
+        const inlineValue = inlineStyles[camelCaseProperty] ?? inlineStyles[cssProperty];
+
+        if (inlineValue) {
+            return inlineValue;
+        }
+
+        return computedStyles?.getPropertyValue(cssProperty).trim() ?? '';
+    };
 
     return {
-        color: current.color || '',
-        backgroundColor:
-            current['background-color'] || current.backgroundColor || '',
-        padding: current.padding || '',
-        fontSize: current['font-size'] || current.fontSize || '',
+        ...emptyStyles,
+        tagName,
+        content: String(selected.get('content') || ''),
+        href: String(attributes.href || ''),
+        canEditContent,
+        isLink: tagName === 'a',
+
+        color: readStyle('color', 'color'),
+        backgroundColor: readStyle('background-color', 'backgroundColor'),
+        fontFamily: readStyle('font-family', 'fontFamily'),
+        fontSize: readStyle('font-size', 'fontSize'),
+        fontWeight: readStyle('font-weight', 'fontWeight'),
+        lineHeight: readStyle('line-height', 'lineHeight'),
+        textAlign: readStyle('text-align', 'textAlign'),
+        display: readStyle('display', 'display'),
+        flexDirection: readStyle('flex-direction', 'flexDirection'),
+        justifyContent: readStyle('justify-content', 'justifyContent'),
+        alignItems: readStyle('align-items', 'alignItems'),
+        gap: readStyle('gap', 'gap'),
+        width: readStyle('width', 'width'),
+        maxWidth: readStyle('max-width', 'maxWidth'),
+        margin: readStyle('margin', 'margin'),
+        padding: readStyle('padding', 'padding'),
+        borderRadius: readStyle('border-radius', 'borderRadius'),
     };
+}
+
+function createLayoutMarkup(columns: 1 | 2 | 3 | 4): string {
+    const columnMarkup = Array.from(
+        { length: columns },
+        (_, index) => `
+            <div class="wb-layout-column">
+                <h3>Column ${index + 1}</h3>
+                <p>Add content here.</p>
+            </div>
+        `,
+    ).join('');
+
+    return `
+        <section class="wb-layout-section">
+            <div
+                class="wb-layout-columns"
+                style="--wb-column-count: ${columns};"
+            >
+                ${columnMarkup}
+            </div>
+        </section>
+    `;
 }
 
 export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const [blocksOpen, setBlocksOpen] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(true);
     const [preview, setPreview] = useState(false);
-    const [selectedElement, setSelectedElement] = useState<string | null>(
-        null,
-    );
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
+    
+    const [navigatorItems, setNavigatorItems] = useState<NavigatorItem[]>([]);
+    const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
+    const [navigatorOpen, setNavigatorOpen] = useState(true);
+    const [collapsedNavigatorIds, setCollapsedNavigatorIds] = useState<Set<string>>(() => new Set());
+    
+    const [selectedElement, setSelectedElement] = useState<string | null>(null);
+    const [searchValue, setSearchValue] = useState('');
     const [styles, setStyles] = useState<InspectorStyles>(emptyStyles);
 
+    const blockDragHandlersRef = useRef<BlockDragHandlers | null>(null);
     const editorRef = useRef<Editor | null>(null);
     const canvasRef = useRef<HTMLDivElement | null>(null);
-
+    const inspectorStyleChangeRef = useRef(false);
+    
+    const [categoryFilter, setCategoryFilter] = useState('All');
+    
     const syncSelection = useCallback((editor: Editor) => {
         const selected = editor.getSelected();
-
+    
         if (!selected) {
+            setSelectedComponentId(null);
             setSelectedElement(null);
             setStyles(emptyStyles);
             return;
         }
-
-        const tagName = String(
-            selected.get('tagName') || 'element',
-        ).toLowerCase();
-
+    
+        setSelectedComponentId(selected.getId());
+    
+        // Buka semua ancestor agar elemen terpilih terlihat.
+        const wrapper = editor.getWrapper();
+        const ancestorIds: string[] = [];
+        let parent = selected.parent();
+    
+        while (parent && parent !== wrapper) {
+            ancestorIds.push(parent.getId());
+            parent = parent.parent();
+        }
+    
+        if (ancestorIds.length > 0) {
+            setCollapsedNavigatorIds((current) => {
+                const next = new Set(current);
+    
+                ancestorIds.forEach((id) => next.delete(id));
+    
+                return next;
+            });
+        }
+    
+        const tagName = String(selected.get('tagName') || 'element').toLowerCase();
+    
         setSelectedElement(`<${tagName}>`);
         setStyles(getSelectedStyles(editor));
+    }, []);
+    
+    const syncHistory = useCallback((editor: Editor) => {
+        setCanUndo(editor.UndoManager.hasUndo());
+        setCanRedo(editor.UndoManager.hasRedo());
+    }, []);
+    
+    const syncNavigator = useCallback((editor: Editor) => {
+        setNavigatorItems(getNavigatorItems(editor));
     }, []);
 
     useEffect(() => {
@@ -414,7 +253,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
             // Panel blok React ditampilkan di luar GrapesJS.
             blockManager: {
-                appendTo: undefined,
+                custom: true,
             },
 
             selectorManager: {
@@ -425,17 +264,48 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                 styles: [],
             },
         });
+        
+        ([1, 2, 3, 4] as const).forEach((columns) => {
+            editor.BlockManager.add(`wb-layout-${columns}`, {
+                label: `Layout ${columns} column`,
+                category: 'Quick Layout',
+                content: createLayoutMarkup(columns),
+            });
+        });
+        
+        editor.on('block:custom', ({ bm, dragStart, drag, dragStop }) => {
+            blockDragHandlersRef.current = {
+                start: (blockId, event) => {
+                    const block = bm.get(blockId);
+        
+                    if (block) {
+                        dragStart(block, event);
+                    }
+                },
+                drag,
+                stop: () => dragStop(),
+            };
+        });
+        
+        elementRegistry.forEach((block) => {
+            editor.BlockManager.add(block.id, {
+                label:  block.label,
+                category: block.category,
+                content: block.content,
+                select: true,
+                attributes: {
+                    title: block.label,
+                },
+            });
+        });
 
         editor.setComponents(`
             <section class="wb-hero">
-                <p class="wb-eyebrow">SELAMAT DATANG</p>
-                <h1>Bangun sesuatu yang hebat.</h1>
-                <p>
-                    Ini adalah halaman awal Anda. Pilih blok dari panel kiri
-                    untuk mulai menyusun website.
-                </p>
+                <p class="wb-eyebrow">WELCOME</p>
+                <h1>Build that something awesome.</h1>
+                <p>It is front page. Select block from left panel to start arrange website</p>
                 <a class="wb-hero__button" href="#">
-                    Mulai sekarang
+                    Start now
                 </a>
             </section>
         `);
@@ -498,62 +368,263 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                     font-size: 32px;
                 }
             }
-        `);
+            
+            .wb-layout-section {
+                box-sizing: border-box;
+                width: 100%;
+                padding: 24px;
+                margin: 0 0 20px;
+            }
+            
+            .wb-layout-columns {
+                display: grid;
+                grid-template-columns:
+                    repeat(var(--wb-column-count, 2), minmax(0, 1fr));
+                gap: 16px;
+            }
+            
+            .wb-layout-column {
+                box-sizing: border-box;
+                min-width: 0;
+                padding: 20px;
+                border: 1px dashed #c9cddd;
+                border-radius: 8px;
+                background: #f8fafc;
+            }
+            
+            .wb-layout-column h3 {
+                margin: 0 0 8px;
+            }
+            
+            .wb-layout-column p {
+                margin: 0;
+                color: #666b80;
+                line-height: 1.6;
+            }
+            
+            @media (max-width: 640px) {
+                .wb-layout-columns {
+                    grid-template-columns: 1fr;
+                }
+            }
+        `); 
 
+        const handleStyleableChange = () => {
+            if (inspectorStyleChangeRef.current) {
+                return;
+            }
+        
+            syncSelection(editor);
+        };
+        
         editor.on('component:selected', () => syncSelection(editor));
         editor.on('component:deselected', () => syncSelection(editor));
-        editor.on('styleable:change', () => syncSelection(editor));
+        editor.on('styleable:change', handleStyleableChange);
 
+        // Jadikan halaman awal sebagai kondisi dasar.
+        // Undo tidak perlu membatalkan pembuatan template awal.
+        editor.UndoManager.clear();
+        
         editorRef.current = editor;
-
+        syncHistory(editor);
+        
+        const refreshNavigator = () => {
+            window.requestAnimationFrame(() => {
+                if (editorRef.current === editor) {
+                    syncNavigator(editor);
+                }
+            });
+        };
+        
+        editor.on('component:add', refreshNavigator);
+        editor.on('component:remove', refreshNavigator);
+        editor.on('component:drag:end', refreshNavigator);
+        
+        syncNavigator(editor);
+        
+        const refreshHistory = () => {
+            window.requestAnimationFrame(() => {
+                if (editorRef.current === editor) {
+                    syncHistory(editor);
+                }
+            });
+        };
+        
+        // Daftarkan listener satu kali saat editor dibuat.
+        editor.on('component:add', refreshHistory);
+        editor.on('component:remove', refreshHistory);
+        editor.on('component:update', refreshHistory);
+        editor.on('component:styleUpdate', refreshHistory);
+        editor.on('styleable:change', refreshHistory);
+        editor.on('undo', refreshHistory);
+        editor.on('redo', refreshHistory);
+        
+        const handleHistoryShortcut = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement | null;
+            const tagName = target?.tagName?.toLowerCase();
+        
+            // Jangan mengambil alih shortcut ketika pengguna sedang mengetik.
+            if (
+                tagName === 'input' ||
+                tagName === 'textarea' ||
+                tagName === 'select' ||
+                target?.isContentEditable ||
+                target?.closest?.('[contenteditable="true"]')
+            ) {
+                return;
+            }
+        
+            const key = event.key.toLowerCase();
+            const hasModifier = event.ctrlKey || event.metaKey;
+        
+            if (!hasModifier || event.altKey) {
+                return;
+            }
+        
+            const isUndo = key === 'z' && !event.shiftKey;
+            const isRedo = (key === 'z' && event.shiftKey) || (key === 'y' && event.ctrlKey && !event.metaKey);
+        
+            if (isUndo) {
+                event.preventDefault();
+        
+                if (editor.UndoManager.hasUndo()) {
+                    editor.UndoManager.undo();
+                    syncSelection(editor);
+                }
+        
+                syncHistory(editor);
+                return;
+            }
+        
+            if (isRedo) {
+                event.preventDefault();
+        
+                if (editor.UndoManager.hasRedo()) {
+                    editor.UndoManager.redo();
+                    syncSelection(editor);
+                }
+        
+                syncHistory(editor);
+            }
+        };    
+        
+        // Shortcut GrapesJS bawaan diganti dengan handler yang
+        // melindungi input dan area pengeditan Text.
+        editor.Keymaps.remove('core:undo');
+        editor.Keymaps.remove('core:redo');
+        
+        document.addEventListener('keydown', handleHistoryShortcut);
+        
+        // Kanvas GrapesJS berjalan di dalam iframe, jadi pasang
+        // listener juga pada dokumen kanvas.
+        let canvasDocument: Document | null = null;
+        
+        const attachCanvasKeyboard = () => {
+            const frame = editor.Canvas.getFrameEl();
+            const nextDocument = frame?.contentDocument ?? null;
+        
+            if (!nextDocument || nextDocument === canvasDocument) {
+                return;
+            }
+        
+            canvasDocument?.removeEventListener('keydown', handleHistoryShortcut);
+        
+            canvasDocument = nextDocument;
+            canvasDocument.addEventListener('keydown', handleHistoryShortcut);
+        };
+        
+        editor.on('canvas:frame:load', attachCanvasKeyboard);
+        attachCanvasKeyboard();
+        
         return () => {
+            document.removeEventListener('keydown', handleHistoryShortcut);
+
+            canvasDocument?.removeEventListener('keydown', handleHistoryShortcut);
+            
+            editor.off('canvas:frame:load', attachCanvasKeyboard);
+            editor.off('component:add', refreshNavigator);
+            editor.off('component:remove', refreshNavigator);
+            editor.off('component:drag:end', refreshNavigator);
+            editor.off('component:add', refreshHistory);
+            editor.off('component:remove', refreshHistory);
+            editor.off('component:update', refreshHistory);
+            editor.off('component:styleUpdate', refreshHistory);
+            editor.off('styleable:change', handleStyleableChange);
+            editor.off('undo', refreshHistory);
+            editor.off('redo', refreshHistory);
             editor.destroy();
             editorRef.current = null;
         };
-    }, [syncSelection]);
+    }, [syncSelection, syncHistory, syncNavigator]);
 
     const addBlock = (block: EditorBlock) => {
         const editor = editorRef.current;
-
-        if (!editor) {
-            return;
-        }
-
-        // Tambahkan komponen ke halaman yang sedang diedit.
+    
+        if (!editor) return;
+    
         const added = editor.addComponents(block.content);
-
-        // Pilih komponen yang baru ditambahkan agar inspector langsung aktif.
         const component = added.at(0);
-
+    
         if (component) {
             editor.select(component);
             syncSelection(editor);
         }
     };
 
-    const changeStyle = (property: keyof InspectorStyles, value: string) => {
+    const changeStyle = (property: InspectorProperty, value: string) => {
         const editor = editorRef.current;
         const selected = editor?.getSelected();
-
+    
         if (!editor || !selected) {
             return;
         }
-
-        const cssProperty: Record<keyof InspectorStyles, string> = {
+    
+        if (property === 'content') {
+            selected.set('content', value);
+            syncSelection(editor);
+            return;
+        }
+    
+        if (property === 'href') {
+            selected.addAttributes({ href: value });
+            syncSelection(editor);
+            return;
+        }
+    
+        const cssProperties: Partial<Record<InspectorProperty, string>> = {
             color: 'color',
             backgroundColor: 'background-color',
-            padding: 'padding',
+            fontFamily: 'font-family',
             fontSize: 'font-size',
+            fontWeight: 'font-weight',
+            lineHeight: 'line-height',
+            textAlign: 'text-align',
+            display: 'display',
+            flexDirection: 'flex-direction',
+            justifyContent: 'justify-content',
+            alignItems: 'align-items',
+            gap: 'gap',
+            width: 'width',
+            maxWidth: 'max-width',
+            margin: 'margin',
+            padding: 'padding',
+            borderRadius: 'border-radius',
         };
-
-        selected.addStyle({
-            [cssProperty[property]]: value,
-        });
-
-        setStyles((current) => ({
-            ...current,
-            [property]: value,
-        }));
+    
+        const cssProperty = cssProperties[property];
+    
+        if (!cssProperty) {
+            return;
+        }
+    
+        inspectorStyleChangeRef.current = true;
+        try {
+            selected.addStyle({ [cssProperty]: value });
+        } finally {
+            inspectorStyleChangeRef.current = false;
+        }
+        
+        setStyles((current) => ({...current, [property]: value }));
     };
 
     const togglePreview = () => {
@@ -569,6 +640,158 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
         setPreview((current) => !current);
     };
+    
+    const handleUndo = () => {
+        const editor = editorRef.current;
+    
+        if (!editor || !editor.UndoManager.hasUndo()) {
+            return;
+        }
+    
+        editor.UndoManager.undo();
+        syncSelection(editor);
+        syncHistory(editor);
+    };
+    
+    const handleRedo = () => {
+        const editor = editorRef.current;
+        
+        if (!editor || !editor.UndoManager.hasRedo()) {
+            return;
+        }
+    
+        editor.UndoManager.redo();
+        syncSelection(editor);
+        syncHistory(editor);
+    };
+    
+    const handleBlockDragStart = (blockId: string, event: Event) => {
+        const handlers = blockDragHandlersRef.current;
+    
+        if (!handlers) {
+            event.preventDefault();
+            return;
+        }
+    
+        handlers.start(blockId, event);
+    };
+    
+    const handleBlockDrag = (event: Event) => {
+        blockDragHandlersRef.current?.drag(event);
+    };
+    
+    const handleBlockDragStop = () => {
+        blockDragHandlersRef.current?.stop();
+    };
+    
+    const selectNavigatorItem = (component: Component) => {
+        const editor = editorRef.current;
+    
+        if (!editor) return;
+    
+        editor.select(component);
+        syncSelection(editor);
+    };
+    
+    const moveNavigatorItem = (component: Component, direction: -1 | 1) => {
+        const editor = editorRef.current;
+        const parent = component.parent();
+    
+        if (!editor || !parent) return;
+    
+        const index = component.index();
+        const nextIndex = index + direction;
+        const siblingCount = parent.components().length;
+    
+        if (nextIndex < 0 || nextIndex >= siblingCount) {
+            return;
+        }
+    
+        // GrapesJS menyesuaikan indeks ketika komponen
+        // dipindahkan dalam parent yang sama.
+        const at = direction === -1 ? nextIndex : nextIndex + 1;
+    
+        component.move(parent, { at });
+    
+        editor.select(component);
+        syncSelection(editor);
+        syncNavigator(editor);
+        syncHistory(editor);
+    };
+    
+    const toggleNavigatorItem = (id: string) => {
+        setCollapsedNavigatorIds((current) => {
+            const next = new Set(current);
+    
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+    
+            return next;
+        });
+    };
+    
+    const addLayoutPreset = (columns: 1 | 2 | 3 | 4) => {
+        const editor = editorRef.current;
+    
+        if (!editor) return;
+    
+        const selected = editor.getSelected();
+        const containerTags = [
+            'div',
+            'section',
+            'main',
+            'header',
+            'footer',
+            'article',
+            'nav',
+            'aside',
+        ];
+    
+        const selectedTag = String(selected?.get('tagName') || '').toLowerCase();
+    
+        const wrapper = editor.getWrapper();
+
+        if (!wrapper) {
+            return;
+        }
+        
+        const target = selected && containerTags.includes(selectedTag) ? selected : wrapper;
+    
+        const columnMarkup = Array.from(
+            { length: columns },
+            (_, index) => `
+                <div class="wb-layout-column">
+                    <h3>Column ${index + 1}</h3>
+                    <p>Add content here.</p>
+                </div>
+            `,
+        ).join('');
+    
+        const markup = `
+            <section class="wb-layout-section">
+                <div
+                    class="wb-layout-columns"
+                    style="--wb-column-count: ${columns};"
+                >
+                    ${columnMarkup}
+                </div>
+            </section>
+        `;
+    
+        const added = target.append(markup);
+        const component = added[0];
+    
+        if (component) {
+            editor.select(component);
+            syncSelection(editor);
+        }
+    
+        syncNavigator(editor);
+        syncHistory(editor);
+    };
 
     return (
         <>
@@ -576,21 +799,40 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
             <EditorLayout
                 websiteName={websiteSlug}
-                blocks={blocks}
+                blocks={elementRegistry}
+                categories={elementCategories}
+                searchValue={searchValue}
+                categoryFilter={categoryFilter}
+                onSearchChange={setSearchValue}
+                onCategoryFilterChange={setCategoryFilter}
                 blocksOpen={blocksOpen}
                 settingsOpen={settingsOpen}
                 preview={preview}
                 selectedElement={selectedElement}
                 styles={styles}
-                onToggleBlocks={() =>
-                    setBlocksOpen((current) => !current)
-                }
-                onToggleSettings={() =>
-                    setSettingsOpen((current) => !current)
-                }
+                onToggleBlocks={() => setBlocksOpen((current) => !current)}
+                onToggleSettings={() => setSettingsOpen((current) => !current)}
                 onTogglePreview={togglePreview}
                 onAddBlock={addBlock}
+                onBlockDragStart={handleBlockDragStart}
+                onBlockDrag={handleBlockDrag}
+                onBlockDragStop={handleBlockDragStop}
                 onStyleChange={changeStyle}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                navigatorItems={navigatorItems}
+                selectedComponentId={selectedComponentId}
+                onSelectNavigatorItem={selectNavigatorItem}
+                onMoveNavigatorItem={moveNavigatorItem}
+                navigatorOpen={navigatorOpen}
+                collapsedNavigatorIds={collapsedNavigatorIds}
+                onToggleNavigatorItem={toggleNavigatorItem}
+                onToggleNavigator={() => {
+                    setNavigatorOpen((open) => !open);
+                }}
+                onAddLayoutPreset={addLayoutPreset}
             >
                 <div
                     id="gjs-canvas"
