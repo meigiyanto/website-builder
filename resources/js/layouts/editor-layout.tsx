@@ -3,8 +3,9 @@ import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNod
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
 import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, AlignLeft, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
-} from 'lucide-react';
+TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful' ;
+// import Select from 'react-select'
 
 type EditorLayoutProps = {
     children: ReactNode;
@@ -607,12 +608,10 @@ export default function EditorLayout({
                                 </label>
                                 
                                 <label className="editor-catalog-category">
-                                    <span className="sr-only">Filter kategori</span>
+                                    <span className="sr-only">Filter category</span>
                                     <select
                                         value={categoryFilter}
-                                        onChange={(event) =>
-                                            onCategoryFilterChange(event.target.value)
-                                        }
+                                        onChange={(event) => onCategoryFilterChange(event.target.value)}
                                         aria-label="Filter kategori elemen"
                                     >
                                         {categories.map((category) => (
@@ -810,9 +809,7 @@ export default function EditorLayout({
                                                 <span>Display</span>
                                                 <select
                                                     value={styles.display}
-                                                    onChange={(event) =>
-                                                        onStyleChange('display', event.target.value)
-                                                    }
+                                                    onChange={(event) => onStyleChange('display', event.target.value)}
                                                 >
                                                     <option value="">Default</option>
                                                     <option value="block">Block</option>
@@ -822,6 +819,7 @@ export default function EditorLayout({
                                                     <option value="grid">Grid</option>
                                                     <option value="none">None</option>
                                                 </select>
+                                                
                                             </label>
                                     
                                             {styles.display === 'flex' && (
@@ -837,9 +835,10 @@ export default function EditorLayout({
                                                             <option value="">Default</option>
                                                             <option value="row">Horizontal</option>
                                                             <option value="column">Vertikal</option>
-                                                            <option value="row-reverse">Horizontal backward</option>
-                                                            <option value="column-reverse">Vertikal backward</option>
+                                                            <option value="row-reverse">Horizontal Backward</option>
+                                                            <option value="column-reverse">Vertikal Backward</option>
                                                         </select>
+                                                        
                                                     </label>
                                     
                                                     <label className="editor-field">
@@ -857,6 +856,7 @@ export default function EditorLayout({
                                                             <option value="space-between">Space between</option>
                                                             <option value="space-around">Space around</option>
                                                         </select>
+                                                        
                                                     </label>
                                     
                                                     <label className="editor-field">
@@ -913,6 +913,7 @@ export default function EditorLayout({
                                                     <option value="Verdana, sans-serif">Verdana</option>
                                                     <option value="monospace">Monospace</option>
                                                 </select>
+                                                
                                             </label>
                                     
                                             <label className="editor-field">
@@ -943,6 +944,7 @@ export default function EditorLayout({
                                                     <option value="700">Bold</option>
                                                     <option value="800">Extra-bold</option>
                                                 </select>
+                                                
                                             </label>
                                     
                                             <label className="editor-field">
@@ -971,6 +973,7 @@ export default function EditorLayout({
                                                     <option value="right">Right</option>
                                                     <option value="justify">Justify</option>
                                                 </select>
+                                                
                                             </label>
                                         </section>
                                     

@@ -29,7 +29,13 @@ export default defineConfig({
     ],
     build: {
         cssMinify: false,
-        minify: false
+        minify: true,
+        chunkSizeWarningLimit: 5000,
+        rolldownOptions: {
+            output: {
+                codeSplitting: true,
+            }
+        }
     },
     server: {
         watch: {
