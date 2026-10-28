@@ -706,7 +706,7 @@ export default function EditorLayout({
                                                     onDragEnd={onBlockDragStop}
                                                 >
                                                     {(() => {
-                                                        const Icon = blockIconById[block.id as keyof typeof blockIconById];
+                                                        const Icon = block.lucideIcon;
                                                     
                                                         return (
                                                             <>

@@ -289,7 +289,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         
         elementRegistry.forEach((block) => {
             editor.BlockManager.add(block.id, {
-                label: `${block.lucideIcon} ${block.label}`,
+                label:  block.label,
                 category: block.category,
                 content: block.content,
                 select: true,
