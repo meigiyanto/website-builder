@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
-import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, AlignLeft, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
+import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, AlignLeft, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
 } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful' ;
 
@@ -247,7 +247,7 @@ const blockIconById = {
     'wb-spacer': ArrowUpDown,
     'wb-hero-section': PanelsTopLeft,
     'wb-footer': PanelBottom,
-    'wb-feature-grid': LayoutGrid,
+    'wb-feature-grid': Columns,
     'wb-navbar': Menu,
     'wb-bullet-list': List,
     'wb-order-list': ListOrdered,

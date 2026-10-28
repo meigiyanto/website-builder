@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Type, AlignLeft, Image, Columns, MousePointerClick, Square, Columns3, Minus, ArrowUpDown, PanelsTopLeft, PanelBottom, LayoutGrid, Menu, ListOrdered, List, Quote, CircleHelp, TriangleAlert, BadgeCheck, Play, Images, Mail, Sparkles, MessageSquareQuote, CreditCard, ChartNoAxesCombined, ArrowRight, ShoppingBag, Badge } from 'lucide-react';
+import { Type, AlignLeft, Image, Columns, MousePointerClick, Square, Columns3, Minus, ArrowUpDown, PanelsTopLeft, PanelBottom, LayoutGrid, Menu, ListOrdered, List, Quote, CircleHelp, TriangleAlert, BadgeCheck, Play, Images, Mail, Sparkles, MessageSquareQuote, CreditCard, ChartNoAxesCombined, ArrowRight, ShoppingBag } from 'lucide-react';
 
 
 export type ElementCategory =
@@ -221,7 +221,7 @@ export const elementRegistry: EditorBlock[] = [
     {
         id: 'wb-alert',
         label: 'Notice / Alert',
-        lucideIcon: CircleHelp,
+        lucideIcon: TriangleAlert,
         category: 'Content',
         content: `
             <div role="note" style="padding:16px 18px;border:1px solid #c7d2fe;border-radius:10px;background:#eef2ff;color:#3730a3;line-height:1.7;">
@@ -233,7 +233,7 @@ export const elementRegistry: EditorBlock[] = [
     {
         id: 'wb-badge',
         label: 'Badge',
-        lucideIcon: Badge,
+        lucideIcon: BadgeCheck,
         category: 'Content',
         content: `<span style="display:inline-block;padding:6px 10px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:700;">BARU</span>`,
     },

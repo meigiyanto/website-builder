@@ -97,17 +97,10 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
         'span', 'a', 'button', 'li', 'label', 'strong', 'em',
     ];
 
-    const canEditContent =
-        selected.components().length === 0 &&
-        editableTags.includes(tagName);
+    const canEditContent = selected.components().length === 0 && editableTags.includes(tagName);
 
-    const readStyle = (
-        cssProperty: string,
-        camelCaseProperty: string,
-    ): string => {
-        const inlineValue =
-            inlineStyles[camelCaseProperty] ??
-            inlineStyles[cssProperty];
+    const readStyle = (cssProperty: string, camelCaseProperty: string,): string => {
+        const inlineValue = inlineStyles[camelCaseProperty] ?? inlineStyles[cssProperty];
 
         if (inlineValue) {
             return inlineValue;
