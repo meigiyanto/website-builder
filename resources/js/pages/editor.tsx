@@ -177,6 +177,63 @@ function canContainComponents(component: Component): boolean {
     return component.get('droppable') !== false && !voidTags.has(tagName);
 }
 
+const DROP_TARGET_TAGS = new Set([
+    'div',
+    'section',
+    'main',
+    'header',
+    'footer',
+    'article',
+    'nav',
+    'aside',
+]);
+
+const VOID_TAGS = new Set([
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr',
+]);
+
+function enableComponentDragDrop(component: Component): void {
+    const tagName = String(
+        component.get('tagName') || '',
+    ).toLowerCase();
+
+    const attributes = component.getAttributes();
+    const classNames = String(attributes.class || '')
+        .split(/\s+/)
+        .filter(Boolean);
+
+    const isLayoutColumn =
+        classNames.includes('wb-layout-column');
+
+    // Parent harus menerima komponen yang diseret.
+    if (DROP_TARGET_TAGS.has(tagName) || isLayoutColumn) {
+        component.set('droppable', true);
+    }
+
+    // Komponen non-void dapat dipindahkan dari canvas.
+    if (!VOID_TAGS.has(tagName)) {
+        component.set('draggable', true);
+    }
+
+    // Terapkan juga ke komponen anak, termasuk konten lama.
+    component.components().models.forEach((child) => {
+        enableComponentDragDrop(child);
+    });
+}
+
 function isLayoutColumn(component: Component): boolean {
     const className = String(component.getAttributes().class || '');
 
@@ -194,11 +251,8 @@ function updateLayoutColumnWidths(parent: Component): void {
         return;
     }
 
-    const explicitWidths: (number | null)[] = columns.map(
-        (column: Component): number | null => {
-            const value = String(
-                column.getAttributes()['data-wb-width'] || '',
-            ).trim();
+    const explicitWidths: (number | null)[] = columns.map((column: Component): number | null => {
+            const value = String(column.getAttributes()['data-wb-width'] || '').trim();
 
             if (!/^\d+(?:\.\d+)?%$/.test(value)) {
                 return null;
@@ -206,45 +260,26 @@ function updateLayoutColumnWidths(parent: Component): void {
 
             const width = Number.parseFloat(value);
 
-            return Number.isFinite(width) && width > 0 && width <= 100
-                ? width
-                : null;
-        },
+            return Number.isFinite(width) && width > 0 && width <= 100 ? width : null;
+        }
     );
 
-    const specifiedTotal = explicitWidths.reduce<number>(
-        (total, width) => total + (width ?? 0),
-        0,
-    );
+    const specifiedTotal = explicitWidths.reduce<number>((total, width) => total + (width ?? 0), 0);
 
-    const unspecifiedCount = explicitWidths.filter(
-        (width) => width === null,
-    ).length;
+    const unspecifiedCount = explicitWidths.filter((width) => width === null).length;
 
     const remaining = Math.max(0, 100 - specifiedTotal);
 
-    const automaticWidth =
-        unspecifiedCount > 0 ? remaining / unspecifiedCount : 0;
+    const automaticWidth = unspecifiedCount > 0 ? remaining / unspecifiedCount : 0;
 
-    const widths = explicitWidths.map(
-        (width) => width ?? automaticWidth,
-    );
+    const widths = explicitWidths.map((width) => width ?? automaticWidth);
 
-    const total = widths.reduce<number>(
-        (sum, width) => sum + width,
-        0,
-    );
+    const total = widths.reduce<number>((sum, width) => sum + width, 0);
 
-    const normalizedWidths =
-        total > 100
-            ? widths.map((width) => (width / total) * 100)
-            : widths;
+    const normalizedWidths = total > 100 ? widths.map((width) => (width / total) * 100) : widths;
 
     parent.setStyle({
-        ...parent.getStyle(),
-        'grid-template-columns': normalizedWidths
-            .map((width) => `minmax(0, ${width}fr)`)
-            .join(' '),
+        ...parent.getStyle(), 'grid-template-columns': normalizedWidths.map((width) => `minmax(0, ${width}fr)`).join(' ')
     });
 }
 
@@ -414,8 +449,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             });
         });
 
-        editor.setComponents(`
-            <section class="wb-hero">
+        editor.setComponents(`<section class="wb-hero">
                 <p class="wb-eyebrow">WELCOME</p>
                 <h1>Build that something awesome.</h1>
                 <p>It is front page. Select block from left panel to start arrange website</p>
@@ -424,6 +458,12 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                 </a>
             </section>
         `);
+        
+        const wrapper = editor.getWrapper();
+        
+        if (wrapper) {
+            enableComponentDragDrop(wrapper);
+        }
 
         editor.setStyle(`
             body {
@@ -532,6 +572,13 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             syncSelection(editor);
         };
         
+        
+        const handleComponentAdded = (component: Component) => {
+            enableComponentDragDrop(component);
+        };
+        
+        editor.on('component:add', handleComponentAdded);
+
         editor.on('component:selected', () => syncSelection(editor));
         editor.on('component:deselected', () => syncSelection(editor));
         editor.on('styleable:change', handleStyleableChange);
@@ -667,6 +714,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             editor.off('component:remove', refreshNavigator);
             editor.off('component:drag:end', refreshNavigator);
             editor.off('component:add', refreshHistory);
+            editor.off('component:add', handleComponentAdded);
             editor.off('component:remove', refreshHistory);
             editor.off('component:update', refreshHistory);
             editor.off('component:styleUpdate', refreshHistory);
@@ -735,27 +783,38 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         
             const normalizedValue = value.trim();
         
+            // Pertahankan nilai yang sedang diketik, termasuk nilai sementara.
+            setStyles((current) => ({
+                ...current,
+                width: value,
+            }));
+        
             if (normalizedValue === '') {
                 selected.removeAttributes('data-wb-width');
-            } else {
-                const validWidth =
-                    /^(?:\d+(?:\.\d+)?%|\d+(?:\.\d+)?px)$/.test(
-                        normalizedValue,
-                    );
-        
-                if (!validWidth) {
-                    return;
-                }
-        
-                selected.addAttributes({
-                    'data-wb-width': normalizedValue,
-                });
+                updateLayoutColumnWidths(parent);
+                return;
             }
         
+            // Lebar khusus kolom saat ini menggunakan satuan persen.
+            // Jangan menolak input sementara seperti "5" ketika mengetik "50%".
+            if (!/^\d+(?:\.\d+)?%$/.test(normalizedValue)) {
+                return;
+            }
+        
+            const width = Number.parseFloat(normalizedValue);
+        
+            if (!Number.isFinite(width) || width <= 0 || width > 100) {
+                return;
+            }
+        
+            selected.addAttributes({
+                'data-wb-width': normalizedValue,
+            });
+        
             updateLayoutColumnWidths(parent);
-            syncSelection(editor);
             return;
         }
+
     
         const cssProperties: Partial<Record<InspectorProperty, string>> = {
             color: 'color',
@@ -929,8 +988,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         
         const target = selected && containerTags.includes(selectedTag) ? selected : wrapper;
     
-        const columnMarkup = Array.from(
-            { length: columns },
+        const columnMarkup = Array.from({ length: columns },
             (_, index) => `
                 <div class="wb-layout-column">
                     <h3>Column ${index + 1}</h3>

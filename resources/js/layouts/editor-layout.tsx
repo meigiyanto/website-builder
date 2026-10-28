@@ -945,9 +945,11 @@ export default function EditorLayout({
                                                     </label>
                                                 </>
                                             )}
-                                    
+
                                             {[
                                                 ['Width', 'width'],
+                                                ['Height', 'height'],
+                                                ['Min Height', 'minHeight'],
                                                 ['Max Width', 'maxWidth'],
                                                 ['Gap', 'gap'],
                                             ].map(([label, property]) => (
@@ -955,9 +957,16 @@ export default function EditorLayout({
                                                     <span>{label}</span>
                                                     <input
                                                         type="text"
-                                                        value={styles[property as keyof InspectorStyles] as string}
-                                                        placeholder="e.g.: 100% or 16px"
-                                                        onChange={(event) => onStyleChange(property as InspectorProperty,event.target.value)}
+                                                        value={
+                                                            styles[property as keyof InspectorStyles] as string
+                                                        }
+                                                        placeholder="e.g.: 100%, 240px, 50vh, auto"
+                                                        onChange={(event) =>
+                                                            onStyleChange(
+                                                                property as InspectorProperty,
+                                                                event.target.value,
+                                                            )
+                                                        }
                                                     />
                                                 </label>
                                             ))}

@@ -54,6 +54,8 @@ export default function AppSelect({
 
     return (
         <Select<AppSelectOption, false>
+            instanceId="editor-category-filter"
+            inputId="editor-category-filter-input"
             className={className}
             classNamePrefix="app-select"
             options={options}
