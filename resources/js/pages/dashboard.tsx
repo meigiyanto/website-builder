@@ -1,24 +1,26 @@
 import { Head } from '@inertiajs/react';
 import AppLayout from '../layouts/app-layout';
+import type { LucideIcon } from 'lucide-react';
+import { Globe, MoveUpRight, ChartNoAxesCombined, Plus, Sparkle, Sparkles } from 'lucide-react';
 
 const stats = [
     {
         label: 'Total Websites',
         value: '0',
         note: 'Website yang Anda buat',
-        icon: '▤',
+        lucideIcon: Globe,
     },
     {
         label: 'Published',
         value: '0',
         note: 'Website yang dipublikasikan',
-        icon: '↗',
+        lucideIcon: MoveUpRight,
     },
     {
         label: 'Total Visitors',
         value: '—',
         note: 'Analitik belum tersedia',
-        icon: '◉',
+        lucideIcon: ChartNoAxesCombined,
     },
 ];
 
@@ -46,33 +48,38 @@ export default function Dashboard() {
                         disabled
                         title="Fitur ini akan diaktifkan setelah modul website tersedia"
                     >
-                        <span aria-hidden="true">＋</span>
+                        <span aria-hidden="true">
+                            <Plus size={18} strokeWidth={1.8} aria-hidden="true" />
+                        </span>
                         Create website
                     </button>
                 </div>
 
                 <div className="dashboard-stats">
-                    {stats.map((stat) => (
-                        <article className="dashboard-stat" key={stat.label}>
-                            <div className="dashboard-stat__top">
-                                <span className="dashboard-stat__label">
-                                    {stat.label}
-                                </span>
-                                <span
-                                    className="dashboard-stat__icon"
-                                    aria-hidden="true"
-                                >
-                                    {stat.icon}
-                                </span>
-                            </div>
-
-                            <strong className="dashboard-stat__value">
-                                {stat.value}
-                            </strong>
-
-                            <p className="dashboard-stat__note">{stat.note}</p>
-                        </article>
-                    ))}
+                    {stats.map((stat) => {
+                        const Icon= stat.lucideIcon;
+                        return (
+                            <article className="dashboard-stat" key={stat.label}>
+                                <div className="dashboard-stat__top">
+                                    <span className="dashboard-stat__label">
+                                        {stat.label}
+                                    </span>
+                                    <span
+                                        className="dashboard-stat__icon"
+                                        aria-hidden="true"
+                                    >
+                                        <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                                    </span>
+                                </div>
+    
+                                <strong className="dashboard-stat__value">
+                                    {stat.value}
+                                </strong>
+    
+                                <p className="dashboard-stat__note">{stat.note}</p>
+                            </article>
+                        )}
+                    )}
                 </div>
 
                 <section className="dashboard-projects">
@@ -102,10 +109,10 @@ export default function Dashboard() {
                                 </div>
                             </div>
                             <span className="empty-sparkle empty-sparkle--one">
-                                ✦
+                                <Sparkles size={18} strokeWidth={1.8} aria-hidden="true" />
                             </span>
                             <span className="empty-sparkle empty-sparkle--two">
-                                ✧
+                                <Sparkle size={18} strokeWidth={1.8} aria-hidden="true" />
                             </span>
                         </div>
 
@@ -122,7 +129,9 @@ export default function Dashboard() {
                             disabled
                             title="Editor visual akan ditambahkan pada tahap berikutnya"
                         >
-                            <span aria-hidden="true">＋</span>
+                            <span aria-hidden="true">
+                                <Plus size={18} strokeWidth={1.8} aria-hidden="true" />
+                            </span>
                             Website pertama Anda
                         </button>
 

@@ -1,40 +1,42 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
-// import type { LucideIcon } from 'lucide-react';
-// import { Globe, Settings, BookDashed, LayoutDashboard } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Globe, Settings, BookDashed, LayoutDashboard, Sparkles } from 'lucide-react';
 
 type AppLayoutProps = {
     children: ReactNode;
-    // lucideIcon: LucideIcon;
 };
 
-const navigation = [
+type NavigationItem = {
+    label: string;
+    href: string;
+    lucideIcon: LucideIcon;
+    available: boolean;
+};
+
+const navigation: NavigationItem[] = [
     {
         label: 'Dashboard',
         href: '/dashboard',
-        // lucideIcon: LayoutDashboard,
-        icon: '▦',
+        lucideIcon: LayoutDashboard,
         available: true,
     },
     {
         label: 'Websites',
         href: '/websites',
-        // lucideIcon: Globe,
-        icon: '▤',
+        lucideIcon: Globe,
         available: false,
     },
     {
         label: 'Templates',
         href: '/templates',
-        // lucideIcon: BookDashed,
-        icon: '▧',
+        lucideIcon: BookDashed,
         available: false,
     },
     {
         label: 'Settings',
         href: '/settings',
-        // lucideIcon: Settings,
-        icon: '⚙',
+        lucideIcon: Settings,
         available: false,
     },
 ];
@@ -55,14 +57,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 />
             )}
 
-            <aside
-                className={`app-sidebar${sidebarOpen ? ' app-sidebar--open' : ''}`}
-            >
-                <Link
-                    href="/dashboard"
-                    className="app-brand"
-                    onClick={() => setSidebarOpen(false)}
-                >
+            <aside className={`app-sidebar${sidebarOpen ? ' app-sidebar--open' : ''}`}>
+                <Link href="/dashboard" className="app-brand" onClick={() => setSidebarOpen(false)}>
                     <span className="app-brand__mark">W</span>
                     <span className="app-brand__text">
                         <strong>Webstudio</strong>
@@ -73,41 +69,37 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <div className="app-sidebar__section-label">
                     WORKSPACE
                 </div>
-
+                
+                
                 <nav className="app-nav" aria-label="Navigasi utama">
                     {navigation.map((item) => {
-                        const active = item.href === '/dashboard' ? url === '/dashboard' || url.startsWith('/dashboard?') : url.startsWith(item.href);
-
+                        const active = item.href === '/dashboard' ? url === '/dashboard' || url.startsWith('/dashboard?') : url === item.href || url.startsWith(`${item.href}/`);
+                        const Icon = item.lucideIcon;
+                
                         if (!item.available) {
                             return (
-                                <div
-                                    key={item.label}
-                                    className="app-nav__item app-nav__item--disabled"
-                                    aria-disabled="true"
-                                    title={`${item.label} akan tersedia nanti`}
-                                >
-                                    <span className="app-nav__icon" aria-hidden="true">
-                                        {item.icon}
+                                <div key={item.label} className="app-nav__item app-nav__item--disabled" aria-disabled="true" title={`${item.label} akan tersedia nanti`}>
+                                    <span className="app-nav__icon">
+                                        <Icon size={18} strokeWidth={1.8} aria-hidden="true"/>
                                     </span>
+                
                                     <span className="app-nav__label">
                                         {item.label}
                                     </span>
-                                    <span className="app-nav__soon">Soon</span>
+                
+                                    <span className="app-nav__soon">
+                                        Soon
+                                    </span>
                                 </div>
                             );
                         }
-
+                
                         return (
-                            <Link
-                                key={item.label}
-                                href={item.href}
-                                className={`app-nav__item${active ? ' is-active' : ''}`}
-                                aria-current={active ? 'page' : undefined}
-                                onClick={() => setSidebarOpen(false)}
-                            >
-                                <span className="app-nav__icon" aria-hidden="true">
-                                    {item.icon}
+                            <Link key={item.label} href={item.href} className={`app-nav__item${active ? ' is-active' : ''}`} aria-current={active ? 'page' : undefined} onClick={() => setSidebarOpen(false)}>
+                                <span className="app-nav__icon">
+                                    <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                                 </span>
+                
                                 <span className="app-nav__label">
                                     {item.label}
                                 </span>
@@ -119,7 +111,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <div className="app-sidebar__bottom">
                     <div className="workspace-card">
                         <span className="workspace-card__icon" aria-hidden="true">
-                            ✦
+                            <Sparkles size={18} strokeWidth={1.8} aria-hidden="true"/>
                         </span>
                         <div>
                             <strong>Free workspace</strong>
