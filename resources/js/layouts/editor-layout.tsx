@@ -5,7 +5,7 @@ import type { Component } from 'grapesjs';
 import { Palette, ArrowLeft, Eye, Undo, Undo2, Redo2, AlignLeft, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
 TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful' ;
-// import Select from 'react-select'
+import AppSelect from '../components/app-select';
 
 type EditorLayoutProps = {
     children: ReactNode;
@@ -609,15 +609,16 @@ export default function EditorLayout({
                                 
                                 <label className="editor-catalog-category">
                                     <span className="sr-only">Filter category</span>
-                                    <select
+                                    <AppSelect
                                         value={categoryFilter}
-                                        onChange={(event) => onCategoryFilterChange(event.target.value)}
-                                        aria-label="Filter kategori elemen"
-                                    >
-                                        {categories.map((category) => (
-                                            <option key={category} value={category}>{category}</option>
-                                        ))}
-                                    </select>
+                                        options={categories.map((category) => ({
+                                            value: category,
+                                            label: category,
+                                        }))}
+                                        onChange={onCategoryFilterChange}
+                                        ariaLabel="Filter kategori elemen"
+                                        className="editor-catalog-category__select"
+                                    />
                                 </label>
 
                                 <section className="editor-layout-presets">
@@ -807,38 +808,38 @@ export default function EditorLayout({
                                     
                                             <label className="editor-field">
                                                 <span>Display</span>
-                                                <select
+                                                <AppSelect
                                                     value={styles.display}
+                                                    options={[
+                                                        { value: '', label: 'Default' },
+                                                        { value: 'block', label: 'Block' },
+                                                        { value: 'inline', label: 'Inline' },
+                                                        { value: 'inline-block', label: 'Inline block' },
+                                                        { value: 'flex', label: 'Flex' },
+                                                        { value: 'grid', label: 'Grid' },
+                                                        { value: 'none', label: 'None' },
+                                                    ]}
                                                     onChange={(event) => onStyleChange('display', event.target.value)}
-                                                >
-                                                    <option value="">Default</option>
-                                                    <option value="block">Block</option>
-                                                    <option value="inline">Inline</option>
-                                                    <option value="inline-block">Inline block</option>
-                                                    <option value="flex">Flex</option>
-                                                    <option value="grid">Grid</option>
-                                                    <option value="none">None</option>
-                                                </select>
-                                                
+                                                    ariaLabel="Display"
+                                                />
                                             </label>
                                     
                                             {styles.display === 'flex' && (
                                                 <>
                                                     <label className="editor-field">
                                                         <span>Flex Direction</span>
-                                                        <select
+                                                        <AppSelect
                                                             value={styles.flexDirection}
-                                                            onChange={(event) =>
-                                                                onStyleChange('flexDirection', event.target.value)
-                                                            }
-                                                        >
-                                                            <option value="">Default</option>
-                                                            <option value="row">Horizontal</option>
-                                                            <option value="column">Vertikal</option>
-                                                            <option value="row-reverse">Horizontal Backward</option>
-                                                            <option value="column-reverse">Vertikal Backward</option>
-                                                        </select>
-                                                        
+                                                            options={[
+                                                                { value: '', label: 'Default' },
+                                                                { value: 'row', label: 'Horizontal' },
+                                                                { value: 'column', label: 'Vertical' },
+                                                                { value: 'row-reverse', label: 'Horizontal Reverse' },
+                                                                { value: 'column-reverse', label: 'Vertical Reverse' },
+                                                            ]}
+                                                            onChange={(event) => onStyleChange('flexDirection', event.target.value)}
+                                                            ariaLabel="Flex Direction"
+                                                        />
                                                     </label>
                                     
                                                     <label className="editor-field">
@@ -879,7 +880,7 @@ export default function EditorLayout({
                                     
                                             {[
                                                 ['Width', 'width'],
-                                                ['Max width', 'maxWidth'],
+                                                ['Max Width', 'maxWidth'],
                                                 ['Gap', 'gap'],
                                             ].map(([label, property]) => (
                                                 <label className="editor-field" key={property}>
@@ -899,21 +900,20 @@ export default function EditorLayout({
                                     
                                             <label className="editor-field">
                                                 <span>Font family</span>
-                                                <select
+                                                <AppSelect
                                                     value={styles.fontFamily}
-                                                    onChange={(event) =>
-                                                        onStyleChange('fontFamily', event.target.value)
-                                                    }
-                                                >
-                                                    <option value="">Default</option>
-                                                    <option value="Arial, sans-serif">Arial</option>
-                                                    <option value="Helvetica, sans-serif">Helvetica</option>
-                                                    <option value="Georgia, serif">Georgia</option>
-                                                    <option value="'Times New Roman', serif">Times New Roman</option>
-                                                    <option value="Verdana, sans-serif">Verdana</option>
-                                                    <option value="monospace">Monospace</option>
-                                                </select>
-                                                
+                                                    options={[
+                                                        { value: '', label: 'Default' },
+                                                        { value: 'Arial, sans-serif', label: 'Arial' },
+                                                        { value: 'Helvetica, sans-serif', label: 'Helvetica' },
+                                                        { value: 'Georgia, serif', label: 'Georgia' },
+                                                        { value: '"Times New Roman", serif', label: 'Times New Roman' },
+                                                        { value: 'Verdana, serif', label: 'Verdana' },
+                                                        { value: 'monospace', label: 'Monospace' },
+                                                    ]}
+                                                    onChange={(event) => onStyleChange('fontFamily', event.target.value)}
+                                                    ariaLabel="Font Family"
+                                                />
                                             </label>
                                     
                                             <label className="editor-field">
@@ -930,21 +930,20 @@ export default function EditorLayout({
                                     
                                             <label className="editor-field">
                                                 <span>Thickness</span>
-                                                <select
+                                                <AppSelect
                                                     value={styles.fontWeight}
-                                                    onChange={(event) =>
-                                                        onStyleChange('fontWeight', event.target.value)
-                                                    }
-                                                >
-                                                    <option value="">Default</option>
-                                                    <option value="300">Light</option>
-                                                    <option value="400">Normal</option>
-                                                    <option value="500">Medium</option>
-                                                    <option value="600">Semi-bold</option>
-                                                    <option value="700">Bold</option>
-                                                    <option value="800">Extra-bold</option>
-                                                </select>
-                                                
+                                                    options={[
+                                                        { value: '', label: 'Default' },
+                                                        { value: '300', label: 'Light' },
+                                                        { value: '400', label: 'Normal' },
+                                                        { value: '500', label: 'Medium' },
+                                                        { value: '600', label: 'Semi-bold' },
+                                                        { value: '700', label: 'Bold' },
+                                                        { value: '800', label: 'Extra-bold' },
+                                                    ]}
+                                                    onChange={(event) => onStyleChange('fontWeight', event.target.value)}
+                                                    ariaLabel="Font Weight"
+                                                />
                                             </label>
                                     
                                             <label className="editor-field">
