@@ -236,37 +236,6 @@ function ColorPickerField({
     );
 }
 
-const blockIconById = {
-    'wb-heading': Type,
-    'wb-text': AlignLeft,
-    'wb-image': ImageIcon,
-    'wb-button': MousePointerClick,
-    'wb-container': Square,
-    'wb-columns': Columns3,
-    'wb-divider': Minus,
-    'wb-spacer': ArrowUpDown,
-    'wb-hero-section': PanelsTopLeft,
-    'wb-footer': PanelBottom,
-    'wb-feature-grid': Columns,
-    'wb-navbar': Menu,
-    'wb-bullet-list': List,
-    'wb-order-list': ListOrdered,
-    'wb-quote': Quote,
-    'wb-faq': CircleHelp,
-    'wb-alert': TriangleAlert,
-    'wb-badge': BadgeCheck,
-    'wb-video': Play,
-    'wb-image-gallery': Images,
-    'wb-contact-form': Mail,
-    'wb-feature-card': Sparkles,
-    'wb-testimonial': MessageSquareQuote,
-    'wb-pricing-card': CreditCard,
-    'wb-statistics': ChartNoAxesCombined,
-    'wb-cta': ArrowRight,
-    'wb-product-card': ShoppingBag,
-} as const;
-
-
 export default function EditorLayout({
     children,
     websiteName,
