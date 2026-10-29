@@ -49,9 +49,7 @@ function getNavigatorItems(editor: Editor): NavigatorItem[] {
         const children = parent.components().models;
     
         children.forEach((component, index) => {
-            const tagName = String(
-                component.get('tagName') || 'div',
-            ).toLowerCase();
+            const tagName = String(component.get('tagName') || 'div',).toLowerCase();
     
             items.push({
                 id: component.getId(),
@@ -149,26 +147,17 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
 }
 
 function createLayoutMarkup(columns: 1 | 2 | 3 | 4): string {
-    const columnMarkup = Array.from(
-        { length: columns },
-        (_, index) => `
-            <div class="wb-layout-column">
+    const columnMarkup = Array.from({ length: columns },(_, index) => `<div class="wb-layout-column">
                 <h3>Column ${index + 1}</h3>
                 <p>Add content here.</p>
-            </div>
-        `,
+            </div>`,
     ).join('');
 
-    return `
-        <section class="wb-layout-section">
-            <div
-                class="wb-layout-columns"
-                style="--wb-column-count: ${columns};"
-            >
+    return `<section class="wb-layout-section">
+            <div class="wb-layout-columns" style="--wb-column-count: ${columns};">
                 ${columnMarkup}
             </div>
-        </section>
-    `;
+        </section>`;
 }
 
 function canContainComponents(component: Component): boolean {
@@ -181,38 +170,11 @@ function canContainComponents(component: Component): boolean {
     return component.get('droppable') !== false && !voidTags.has(tagName);
 }
 
-const DROP_TARGET_TAGS = new Set([
-    'div',
-    'section',
-    'main',
-    'header',
-    'footer',
-    'article',
-    'nav',
-    'aside',
-]);
-
-const VOID_TAGS = new Set([
-    'area',
-    'base',
-    'br',
-    'col',
-    'embed',
-    'hr',
-    'img',
-    'input',
-    'link',
-    'meta',
-    'param',
-    'source',
-    'track',
-    'wbr',
-]);
+const DROP_TARGET_TAGS = new Set(['div','section', 'main', 'header', 'footer', 'article', 'nav', 'aside']);
+const VOID_TAGS = new Set([ 'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
 function isLayoutColumn(component: Component): boolean {
-    const className = String(
-        component.getAttributes().class || '',
-    );
+    const className = String(component.getAttributes().class || '');
 
     return className.split(/\s+/).includes('wb-layout-column');
 }
@@ -222,6 +184,21 @@ function canAcceptNativeDrop(source: Component, target: Component ): boolean {
     const targetTag = String(target?.get('tagName') || '').toLowerCase();
     const sourceClass = String(source?.getAttributes().class || '');
     const targetClass = String(target?.getAttributes().class || '');
+    
+    console.log('[DnD][CALL ARGUMENTS]', {
+        sourceId: source?.getId(),
+        sourceTag: source?.get('tagName'),
+        sourceType: source?.get('type'),
+        sourceContent: source?.get('content'),
+        sourceDraggable: source?.get('draggable'),
+    
+        targetId: target?.getId(),
+        targetTag: target?.get('tagName'),
+        targetType: target?.get('type'),
+        targetContent: target?.get('content'),
+        targetDroppable: target?.get('droppable'),
+    });
+    
     const reject = (reason: string): boolean => {
         console.warn('[DnD][VALIDATION] REJECT', {
             reason,
@@ -263,7 +240,7 @@ function canAcceptNativeDrop(source: Component, target: Component ): boolean {
 
         ancestor = ancestor.parent() ?? undefined;
     }
-
+    
     console.debug('[DnD][VALIDATION] ACCEPT', {
         source: {
             id: source.getId(),
@@ -276,22 +253,31 @@ function canAcceptNativeDrop(source: Component, target: Component ): boolean {
             className: targetClass,
         },
     });
-
+    
     return true;
 }
 
-function enableComponentDragDrop(
-    component: Component,
-): void {
+function enableComponentDragDrop(component: Component): void {
     const tagName = String(component.get('tagName') || '').toLowerCase();
-
     const canBeMoved = !VOID_TAGS.has(tagName);
 
     component.set({
-        draggable: canBeMoved ? (source: Component, target: Component ) => canAcceptNativeDrop(source, target) : false,
-        droppable: (source: Component, target: Component) => canAcceptNativeDrop(source, target)
+        draggable: canBeMoved ? (source: Component, target: Component) => canAcceptNativeDrop(source, target) : false,
+        droppable: (source: Component, target: Component) => canAcceptNativeDrop(source, target),
     });
-
+    
+    /*
+    console.log('[DnD][SET DRAG DROP]', {
+        id: component.getId(),
+        tagName,
+        canBeMoved,
+        draggableAfterSet: component.get('draggable'),
+        droppableAfterSet: component.get('droppable'),
+        parentId: component.parent()?.getId(),
+        text: component.getEl()?.textContent?.trim(),
+    });
+    */
+    
     component.components().models.forEach((child) => {
         enableComponentDragDrop(child);
     });
@@ -299,10 +285,7 @@ function enableComponentDragDrop(
 
 function updateLayoutColumnWidths(parent: Component): void {
     const components = parent.components().models as Component[];
-
-    const columns = components.filter((component: Component) =>
-        isLayoutColumn(component),
-    );
+    const columns = components.filter((component: Component) => isLayoutColumn(component));
 
     if (columns.length === 0) {
         return;
@@ -348,18 +331,14 @@ type ComponentLocation = {
     index: number;
 };
 
-function getComponentLocation(
-    component: Component,
-): ComponentLocation {
+function getComponentLocation(component: Component ): ComponentLocation {
     const parent = component.parent();
 
     return {
         id: component.getId(),
         tagName: String(component.get('tagName') || 'div'),
         parentId: parent?.getId() ?? null,
-        parentTag: parent
-            ? String(parent.get('tagName') || 'div')
-            : null,
+        parentTag: parent ? String(parent.get('tagName') || 'div') : null,
         index: component.index(),
     };
 }
@@ -494,7 +473,45 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             canvas: {
                 styles: [],
             },
+            rte: {
+                // Memastikan baris baru menggunakan paragraf / memisahkan komponen, bukan menyisipkan <br> kotor
+                forceCreateLineBreak: false, 
+            }
         });
+        
+        console.log('[DnD][EDITOR INSTANCE]', {
+            version: grapesjs.version,
+            editorExists: Boolean(editor),
+            wrapperId: editor.getWrapper()?.getId(),
+        });
+        
+        editor.on('component:drag:start', (data) => {
+            console.log('[PROBE] drag:start', {
+                id: data.target?.getId(),
+                tagName: data.target?.get('tagName'),
+                parentId: data.parent?.getId(),
+                index: data.index,
+            });
+        });
+        
+        editor.on('component:drag', (data) => {
+            console.log('[PROBE] drag', {
+                id: data.target?.getId(),
+                tagName: data.target?.get('tagName'),
+                parentId: data.parent?.getId(),
+                index: data.index,
+            });
+        });
+        
+        editor.on('component:drag:end', (data) => {
+            console.log('[PROBE] drag:end', {
+                id: data.target?.getId(),
+                tagName: data.target?.get('tagName'),
+                parentId: data.parent?.getId(),
+                index: data.index,
+            });
+        });
+        
         const rteModule = editor.RichTextEditor;
         const originalLinkAction = rteModule.get('link');
         
@@ -518,18 +535,12 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                     }
         
                     const startNode = range.startContainer;
-                    const startElement =
-                        startNode.nodeType === 1
-                            ? startNode as Element
-                            : startNode.parentElement;
+                    const startElement = startNode.nodeType === 1 ? startNode as Element : startNode.parentElement;
         
                     const existingLink = startElement?.closest('a');
                     const currentUrl = existingLink?.getAttribute('href') ?? '';
         
-                    const url = rte.doc.defaultView?.prompt(
-                        'Masukkan URL tujuan:',
-                        currentUrl,
-                    );
+                    const url = rte.doc.defaultView?.prompt('Masukkan URL tujuan:', currentUrl);
         
                     if (url === null || url === undefined) {
                         return;
@@ -543,15 +554,12 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         
                     selection.removeAllRanges();
                     selection.addRange(range);
-        
-                    if (existingLink) {
-                        existingLink.setAttribute('href', trimmedUrl);
-                    } else {
-                        rte.exec('createLink', trimmedUrl);
-                    }
+                    
+                    existingLink ? existingLink.setAttribute('href', trimmedUrl) : rte.exec('createLink', trimmedUrl);
                 },
             });
         }
+        
         ([1, 2, 3, 4] as const).forEach((columns) => {
             editor.BlockManager.add(`wb-layout-${columns}`, {
                 label: `Layout ${columns} column`,
@@ -586,30 +594,39 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             });
         });
 
-        const hasSavedProject =
-            websiteContent !== null &&
-            websiteContent !== undefined &&
-            Object.keys(websiteContent).length > 0;
+        const hasSavedProject = websiteContent !== null && websiteContent !== undefined && Object.keys(websiteContent).length > 0;
         
         if (!hasSavedProject) {
-            editor.setComponents(`
-                <section class="wb-hero">
-                    <p class="wb-eyebrow">WELCOME</p>
-                    <h1>Build that something awesome.</h1>
-                    <p>
-                        It is front page. Select block from left panel
-                        to start arrange website
-                    </p>
-                    <a class="wb-hero__button" href="#">
-                        Start now
-                    </a>
-                </section>
-            `);
+            editor.setComponents(`<section class="wb-hero">
+    <p class="wb-eyebrow">WELCOME</p>
+    <h1>Build that something awesome.</h1>
+    <p>It is front page. Select block from left panel to start arrange website</p>
+    <a class="wb-hero__button" href="#">Start now</a>
+</section>`);
+        }
+        
+        function auditComponentTree(component: Component): void {
+            const tagName = String(component.get('tagName') || '').toLowerCase();
+            const element = component.getEl();
+        
+            console.log('[COMPONENT TREE]', {
+                id: component.getId(),
+                tagName,
+                type: component.get('type'),
+                content: component.get('content'),
+                text: element?.textContent?.trim(),
+                parentId: component.parent()?.getId(),
+                parentTag: component.parent()?.get('tagName'),
+                draggable: component.get('draggable'),
+            });
+        
+            component.components().models.forEach(auditComponentTree);
         }
         
         const wrapper = editor.getWrapper();
         
         if (wrapper) {
+            auditComponentTree(wrapper);
             enableComponentDragDrop(wrapper);
         }
 
@@ -681,8 +698,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             
             .wb-layout-columns {
                 display: grid;
-                grid-template-columns:
-                    repeat(var(--wb-column-count, 2), minmax(0, 1fr));
+                grid-template-columns: repeat(var(--wb-column-count, 2), minmax(0, 1fr));
                 gap: 16px;
             }
             
@@ -743,9 +759,9 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             }
         
             const el = target.getEl();
-        
+            
             console.group('[DnD][START]');
-            console.log('Model ID:', target.getId());
+            ('Model ID:', target.getId());
             console.log('Model tagName:', target.get('tagName'));
             console.log('Model type:', target.get('type'));
             console.log('Model content:', target.get('content'));
@@ -778,7 +794,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             
             if (target && parent) {
                 const moveCheck = editor.Components.canMove(parent,target,index);
-            
+
                 console.log('[DnD][CAN MOVE]', {
                     sourceId: target.getId(),
                     targetParentId: parent.getId(),
@@ -794,7 +810,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             requestAnimationFrame(() => {
                 const after = getComponentLocation(component);
                 const element = component.getEl();
-        
+                
                 console.group('[DnD] RESULT');
                 console.log('Before:', snapshot?.before ?? null);
                 console.log('Drop candidate parent:', parent?.getId() ?? null);
@@ -818,7 +834,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             if (!target) {
                 return;
             }
-        
+            
             console.log('[DnD][MOVE]', {
                 source: {
                     id: target.getId(),
@@ -826,16 +842,22 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                     type: target.get('type'),
                     content: target.get('content'),
                 },
-                candidateParent: parent
-                    ? {
-                          id: parent.getId(),
-                          tagName: parent.get('tagName'),
-                          type: parent.get('type'),
-                  }
-                    : null,
+                candidateParent: parent ? { id: parent.getId(), tagName: parent.get('tagName'), type: parent.get('type')} : null,
                 candidateIndex: index,
             });
         };
+        
+        editor.on('component:drag:start', (data) => {
+            console.log('[PROBE] component:drag:start', data);
+        });
+        
+        editor.on('component:drag', (data) => {
+            console.log('[PROBE] component:drag', data);
+        });
+        
+        editor.on('component:drag:end', (data) => {
+            console.log('[PROBE] component:drag:end', data);
+        });
         
         editor.on('component:drag:start', handleDragStart);
         editor.on('component:drag', handleDragMove);
@@ -1255,25 +1277,17 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         
         const target = selected && containerTags.includes(selectedTag) ? selected : wrapper;
     
-        const columnMarkup = Array.from({ length: columns },
-            (_, index) => `
-                <div class="wb-layout-column">
+        const columnMarkup = Array.from({ length: columns }, (_, index) => `<div class="wb-layout-column">
                     <h3>Column ${index + 1}</h3>
                     <p>Add content here.</p>
-                </div>
-            `,
+                </div>`,
         ).join('');
     
-        const markup = `
-            <section class="wb-layout-section">
-                <div
-                    class="wb-layout-columns"
-                    style="--wb-column-count: ${columns};"
-                >
+        const markup = `<section class="wb-layout-section">
+                <div class="wb-layout-columns" style="--wb-column-count: ${columns};">
                     ${columnMarkup}
                 </div>
-            </section>
-        `;
+            </section>`;
     
         const added = target.append(markup);
         const component = added[0];
@@ -1330,11 +1344,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                 saveStatus={saveStatus}
                 onSaveDraft={saveDraft}
             >
-                <div
-                    id="gjs-canvas"
-                    ref={canvasRef}
-                    className="gjs-canvas-mount"
-                />
+                <div id="gjs-canvas" ref={canvasRef} className="gjs-canvas-mount" />
             </EditorLayout>
         </>
     );

@@ -19,16 +19,7 @@ export type EditorBlock = {
     content: string;
 };
 
-export const elementCategories = [
-    'All',
-    'Basic',
-    'Layout',
-    'Navigation',
-    'Content',
-    'Media',
-    'Form',
-    'Marketing',
-] as const;
+export const elementCategories = ['All', 'Basic', 'Layout', 'Navigation', 'Content', 'Media', 'Form', 'Marketing'] as const;
 
 export const elementRegistry: EditorBlock[] = [
     /* Basic 6 block */
@@ -161,9 +152,9 @@ export const elementRegistry: EditorBlock[] = [
         lucideIcon: List,
         category: 'Content',
         content: `<ul style="padding-left:24px;line-height:2;color:#34364a;">
-    <li>Poin keunggulan pertama</li>
-    <li>Poin keunggulan kedua</li>
-    <li>Poin keunggulan ketiga</li>
+    <li>Poin keunggulan I</li>
+    <li>Poin keunggulan II</li>
+    <li>Poin keunggulan III</li>
 </ul>`,
     },
     {
@@ -304,7 +295,7 @@ export const elementRegistry: EditorBlock[] = [
         lucideIcon: Mail,
         category: 'Form',
         content: `<form style="display:grid;gap:14px;max-width:560px;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
-                <label style="display:grid;gap:6px;">Nama<input type="text" placeholder="Nama Anda" style="padding:12px;border:1px solid #d7d9e2;border-radius:8px;" /></label>
+    <label style="display:grid;gap:6px;">Nama<input type="text" placeholder="Nama Anda" style="padding:12px;border:1px solid #d7d9e2;border-radius:8px;" /></label>
     <label style="display:grid;gap:6px;">Email<input type="email" placeholder="nama@email.com" style="padding:12px;border:1px solid #d7d9e2;border-radius:8px;" /></label>
     <label style="display:grid;gap:6px;">Pesan<textarea rows="4" placeholder="Tulis pesan Anda" style="padding:12px;border:1px solid #d7d9e2;border-radius:8px;"></textarea></label>
     <button type="button" style="padding:12px 18px;border:0;border-radius:8px;background:#6658e8;color:#fff;font-weight:700;">Kirim Pesan</button>
@@ -328,11 +319,11 @@ export const elementRegistry: EditorBlock[] = [
         label: 'Testimonial',
         lucideIcon: MessageSquareQuote,
         category: 'Marketing',
-        content: `<blockquote style="margin:0;padding:28px;border-radius:14px;background:#f7f6ff;">
+        content: `<blockquote style="margin:0;padding:32px;border-radius:14px;background:#f7f6ff;">
     <p style="font-size:20px;line-height:1.7;color:#34324d;">“Layanan yang sangat membantu dan mudah digunakan. Pengalaman kami menjadi jauh lebih baik.”</p>
     <footer style="display:flex;align-items:center;gap:12px;">
         <img src="https://placehold.co/56x56?text=AN" alt="Foto pelanggan" style="width:56px;height:56px;border-radius:50%;object-fit:cover;" />
-        <div><strong>Andi Nugraha</strong><div style="margin-top:4px;color:#777b8e;font-size:13px;">Pelanggan</div></div>
+        <div><strong>Mei Giyanto</strong><div style="margin-top:4px;color:#777b8e;font-size:13px;">Pelanggan</div></div>
     </footer>
 </blockquote>`,
     },
