@@ -6,6 +6,21 @@ import EditorLayout, { type InspectorProperty, type InspectorStyles, type Naviga
 import { elementCategories, elementRegistry, type EditorBlock } from '../lib/website-builder/element-registry';
 import '../../css/editor.scss';
 
+
+const DND_DEBUG = false;
+
+function dndLog(...args: unknown[]): void {
+    if (DND_DEBUG) {
+        console.log(...args);
+    }
+}
+
+function dndWarn(...args: unknown[]): void {
+    if (DND_DEBUG) {
+        dndWarn(...args);
+    }
+}
+
 type EditorPageProps = {
     websiteId: number;
     websiteSlug: string;
@@ -185,74 +200,29 @@ function canAcceptNativeDrop(source: Component, target: Component ): boolean {
     const sourceClass = String(source?.getAttributes().class || '');
     const targetClass = String(target?.getAttributes().class || '');
     
-    console.log('[DnD][CALL ARGUMENTS]', {
-        sourceId: source?.getId(),
-        sourceTag: source?.get('tagName'),
-        sourceType: source?.get('type'),
-        sourceContent: source?.get('content'),
-        sourceDraggable: source?.get('draggable'),
-    
-        targetId: target?.getId(),
-        targetTag: target?.get('tagName'),
-        targetType: target?.get('type'),
-        targetContent: target?.get('content'),
-        targetDroppable: target?.get('droppable'),
-    });
-    
-    const reject = (reason: string): boolean => {
-        console.warn('[DnD][VALIDATION] REJECT', {
-            reason,
-            source: {
-                id: source?.getId(),
-                tagName: sourceTag,
-                className: sourceClass,
-            },
-            target: {
-                id: target?.getId(),
-                tagName: targetTag,
-                className: targetClass,
-            },
-        });
-
-        return false;
-    };
-
     if (!source || !target || source === target) {
-        return reject('source/target kosong atau sama');
+        dndLog('source/target kosong atau sama');
     }
 
     if (sourceTag === 'body' || source.is('wrapper') || VOID_TAGS.has(targetTag)) {
-        return reject('source wrapper/body atau target void');
+        dndLog('source wrapper/body atau target void');
     }
 
     const isValidTarget = DROP_TARGET_TAGS.has(targetTag) || isLayoutColumn(target);
 
     if (!isValidTarget) {
-        return reject('target tidak termasuk target yang diizinkan');
+        dndLog('target tidak termasuk target yang diizinkan');
     }
 
     let ancestor: Component | undefined = target;
 
     while (ancestor) {
         if (ancestor === source) {
-            return reject('target adalah source atau keturunannya');
+            dndLog('target adalah source atau keturunannya');
         }
 
         ancestor = ancestor.parent() ?? undefined;
     }
-    
-    console.debug('[DnD][VALIDATION] ACCEPT', {
-        source: {
-            id: source.getId(),
-            tagName: sourceTag,
-            className: sourceClass,
-        },
-        target: {
-            id: target.getId(),
-            tagName: targetTag,
-            className: targetClass,
-        },
-    });
     
     return true;
 }
@@ -265,19 +235,7 @@ function enableComponentDragDrop(component: Component): void {
         draggable: canBeMoved ? (source: Component, target: Component) => canAcceptNativeDrop(source, target) : false,
         droppable: (source: Component, target: Component) => canAcceptNativeDrop(source, target),
     });
-    
-    /*
-    console.log('[DnD][SET DRAG DROP]', {
-        id: component.getId(),
-        tagName,
-        canBeMoved,
-        draggableAfterSet: component.get('draggable'),
-        droppableAfterSet: component.get('droppable'),
-        parentId: component.parent()?.getId(),
-        text: component.getEl()?.textContent?.trim(),
-    });
-    */
-    
+
     component.components().models.forEach((child) => {
         enableComponentDragDrop(child);
     });
@@ -473,45 +431,87 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             canvas: {
                 styles: [],
             },
-            rte: {
-                // Memastikan baris baru menggunakan paragraf / memisahkan komponen, bukan menyisipkan <br> kotor
-                forceCreateLineBreak: false, 
-            }
         });
         
-        console.log('[DnD][EDITOR INSTANCE]', {
-            version: grapesjs.version,
-            editorExists: Boolean(editor),
-            wrapperId: editor.getWrapper()?.getId(),
-        });
-        
-        editor.on('component:drag:start', (data) => {
-            console.log('[PROBE] drag:start', {
-                id: data.target?.getId(),
-                tagName: data.target?.get('tagName'),
-                parentId: data.parent?.getId(),
-                index: data.index,
+        // Diagnostik sementara untuk membandingkan mouse dan sentuhan.
+        const pointerProbeCleanups: Array<() => void> = [];
+
+        const installPointerProbe = (root: EventTarget, surface: string ) => {
+            const lastMoveAt = new Map<string, number>();
+
+            const eventNames = [
+                'pointerdown',
+                'pointermove',
+                'pointerup',
+                'pointercancel',
+                'touchstart',
+                'touchend',
+                'touchcancel',
+            ];
+
+            const handler = (event: Event) => {
+                const pointer = event as PointerEvent;
+                const isMove = event.type === 'pointermove';
+                const key = String(pointer.pointerId ?? 'touch');
+                const now = performance.now();
+
+                // Batasi log pointermove agar console tidak penuh.
+                if ( isMove && now - (lastMoveAt.get(key) ?? 0) < 150) {
+                    return;
+                }
+
+                if (isMove) {
+                    lastMoveAt.set(key, now);
+                }
+
+                // Hindari instanceof Element karena event berasal
+                // dari dokumen iframe yang berbeda.
+                const rawTarget = event.target as Element | null;
+                const target = rawTarget?.nodeType === 1 ? rawTarget : null;
+
+                const componentElement = target?.closest('[data-gjs-type], .gjs-selected, .gjs-hovered');
+            
+                if (event.target instanceof Element) {
+                    console.log('[Pointer Target]', {
+                        tag: target.tagName,
+                        className: target.getAttribute('class'),
+                        parentTag: target.parentElement?.tagName,
+                        parentClass: target.parentElement?.getAttribute('class'),
+                        closestHeading: target.closest('h1, h2, h3, h4, h5, h6')?.tagName ?? null,
+                    });
+                }
+
+                console.log('[Pointer Probe]', {
+                    surface,
+                    event: event.type,
+                    pointerType: pointer.pointerType ?? null,
+                    pointerId: pointer.pointerId ?? null,
+                    buttons: pointer.buttons ?? null,
+                    targetTag: target?.tagName?.toLowerCase() ?? null,
+                    targetClass: target?.getAttribute('class') ?? null,
+                    componentType: componentElement?.getAttribute('data-gjs-type') ?? null,
+                    defaultPrevented: event.defaultPrevented,
+                    cancelable: event.cancelable,
+                });
+            };
+
+            eventNames.forEach((eventName) => {
+                root.addEventListener(eventName, handler, {
+                    capture: true,
+                    passive: true,
+                });
             });
-        });
-        
-        editor.on('component:drag', (data) => {
-            console.log('[PROBE] drag', {
-                id: data.target?.getId(),
-                tagName: data.target?.get('tagName'),
-                parentId: data.parent?.getId(),
-                index: data.index,
+
+            pointerProbeCleanups.push(() => {
+                eventNames.forEach((eventName) => {
+                    root.removeEventListener(eventName, handler, true);
+                });
             });
-        });
-        
-        editor.on('component:drag:end', (data) => {
-            console.log('[PROBE] drag:end', {
-                id: data.target?.getId(),
-                tagName: data.target?.get('tagName'),
-                parentId: data.parent?.getId(),
-                index: data.index,
-            });
-        });
-        
+        };
+
+        // Input yang terjadi di luar iframe.
+        installPointerProbe(container, 'editor-container');
+
         const rteModule = editor.RichTextEditor;
         const originalLinkAction = rteModule.get('link');
         
@@ -605,28 +605,9 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
 </section>`);
         }
         
-        function auditComponentTree(component: Component): void {
-            const tagName = String(component.get('tagName') || '').toLowerCase();
-            const element = component.getEl();
-        
-            console.log('[COMPONENT TREE]', {
-                id: component.getId(),
-                tagName,
-                type: component.get('type'),
-                content: component.get('content'),
-                text: element?.textContent?.trim(),
-                parentId: component.parent()?.getId(),
-                parentTag: component.parent()?.get('tagName'),
-                draggable: component.get('draggable'),
-            });
-        
-            component.components().models.forEach(auditComponentTree);
-        }
-        
         const wrapper = editor.getWrapper();
         
         if (wrapper) {
-            auditComponentTree(wrapper);
             enableComponentDragDrop(wrapper);
         }
 
@@ -754,27 +735,10 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         const handleDragStart = ({ target, parent, index }: { target?: Component; parent?: Component; index?: number; }) => {
             
             if (!target) {
-                console.warn('[DnD][START] target undefined');
                 return;
             }
         
             const el = target.getEl();
-            
-            console.group('[DnD][START]');
-            ('Model ID:', target.getId());
-            console.log('Model tagName:', target.get('tagName'));
-            console.log('Model type:', target.get('type'));
-            console.log('Model content:', target.get('content'));
-            console.log('Model attributes:', target.getAttributes());
-            console.log('DOM element:', el);
-            console.log('DOM tagName:', el?.tagName);
-            console.log('DOM text:', el?.textContent);
-            console.log('Parent ID:', parent?.getId());
-            console.log('Parent tagName:', parent?.get('tagName'));
-            console.log('Index:', index);
-            console.trace('[DnD][START] trace');
-            
-            console.groupEnd();
         
             dragAudit.set(target.getId(), {
                 component: target,
@@ -785,7 +749,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         const handleDragEnd = ({ target, parent, index }: ComponentDragAuditEvent) => {
             // Jangan mengakses komponen jika target tidak tersedia.
             if (!target) {
-                console.warn('[DnD] Drag ended without a component target.');
+                dndWarn('[DnD] Drag ended without a component target.');
                 return;
             }
         
@@ -794,16 +758,6 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             
             if (target && parent) {
                 const moveCheck = editor.Components.canMove(parent,target,index);
-
-                console.log('[DnD][CAN MOVE]', {
-                    sourceId: target.getId(),
-                    targetParentId: parent.getId(),
-                    targetParentTag: parent.get('tagName'),
-                    targetParentClass: parent.getAttributes().class || '',
-                    candidateIndex: index,
-                    result: moveCheck.result,
-                    reason: moveCheck.reason,
-                });
             }
 
         
@@ -811,16 +765,6 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                 const after = getComponentLocation(component);
                 const element = component.getEl();
                 
-                console.group('[DnD] RESULT');
-                console.log('Before:', snapshot?.before ?? null);
-                console.log('Drop candidate parent:', parent?.getId() ?? null);
-                console.log('Drop candidate index:', index);
-                console.log('Actual model after:', after);
-                console.log('Rendered element exists:', Boolean(element));
-                console.log('Rendered element connected:', Boolean(element?.isConnected));
-                console.log('Component JSON:', component.toJSON());
-                console.groupEnd();
-        
                 dragAudit.delete(component.getId());
         
                 syncNavigator(editor);
@@ -830,34 +774,10 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         };
         
         const handleDragMove = ({ target, parent, index }: { target?: Component; parent?: Component; index?: number; }) => {
-            
             if (!target) {
                 return;
             }
-            
-            console.log('[DnD][MOVE]', {
-                source: {
-                    id: target.getId(),
-                    tagName: target.get('tagName'),
-                    type: target.get('type'),
-                    content: target.get('content'),
-                },
-                candidateParent: parent ? { id: parent.getId(), tagName: parent.get('tagName'), type: parent.get('type')} : null,
-                candidateIndex: index,
-            });
         };
-        
-        editor.on('component:drag:start', (data) => {
-            console.log('[PROBE] component:drag:start', data);
-        });
-        
-        editor.on('component:drag', (data) => {
-            console.log('[PROBE] component:drag', data);
-        });
-        
-        editor.on('component:drag:end', (data) => {
-            console.log('[PROBE] component:drag:end', data);
-        });
         
         editor.on('component:drag:start', handleDragStart);
         editor.on('component:drag', handleDragMove);
@@ -983,6 +903,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         
             canvasDocument = nextDocument;
             canvasDocument.addEventListener('keydown', handleHistoryShortcut);
+            installPointerProbe(canvasDocument, 'grapesjs-canvas-iframe');
         };
         
         editor.on('canvas:frame:load', attachCanvasKeyboard);
@@ -1013,6 +934,8 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             editor.off('component:drag:start', handleDragStart);
             editor.off('component:drag:end', handleDragEnd);
             editor.off('component:drag', handleDragMove);
+            pointerProbeCleanups.forEach((cleanup) => cleanup());
+            pointerProbeCleanups.length = 0;
             editor.destroy();
             editorRef.current = null;
         };
@@ -1026,9 +949,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
     
         const selected = editor.getSelected();
     
-        const target = selected && canContainComponents(selected)
-            ? selected
-            : selected?.parent() ?? wrapper;
+        const target = selected && canContainComponents(selected) ? selected : selected?.parent() ?? wrapper;
     
         const added = target.append(block.content);
         const component = added[0];
