@@ -217,49 +217,65 @@ function isLayoutColumn(component: Component): boolean {
     return className.split(/\s+/).includes('wb-layout-column');
 }
 
-function canAcceptNativeDrop(
-    source: Component,
-    target: Component,
-): boolean {
+function canAcceptNativeDrop(source: Component, target: Component ): boolean {
+    const sourceTag = String(source?.get('tagName') || '').toLowerCase();
+    const targetTag = String(target?.get('tagName') || '').toLowerCase();
+    const sourceClass = String(source?.getAttributes().class || '');
+    const targetClass = String(target?.getAttributes().class || '');
+    const reject = (reason: string): boolean => {
+        console.warn('[DnD][VALIDATION] REJECT', {
+            reason,
+            source: {
+                id: source?.getId(),
+                tagName: sourceTag,
+                className: sourceClass,
+            },
+            target: {
+                id: target?.getId(),
+                tagName: targetTag,
+                className: targetClass,
+            },
+        });
+
+        return false;
+    };
+
     if (!source || !target || source === target) {
-        return false;
+        return reject('source/target kosong atau sama');
     }
 
-    const sourceTag = String(
-        source.get('tagName') || '',
-    ).toLowerCase();
-
-    const targetTag = String(
-        target.get('tagName') || '',
-    ).toLowerCase();
-
-    if (
-        sourceTag === 'body' ||
-        source.is('wrapper') ||
-        VOID_TAGS.has(targetTag)
-    ) {
-        return false;
+    if (sourceTag === 'body' || source.is('wrapper') || VOID_TAGS.has(targetTag)) {
+        return reject('source wrapper/body atau target void');
     }
 
-    const isValidTarget =
-        DROP_TARGET_TAGS.has(targetTag) ||
-        isLayoutColumn(target);
+    const isValidTarget = DROP_TARGET_TAGS.has(targetTag) || isLayoutColumn(target);
 
     if (!isValidTarget) {
-        return false;
+        return reject('target tidak termasuk target yang diizinkan');
     }
 
-    // Jangan izinkan komponen dipindahkan ke dalam
-    // dirinya sendiri atau salah satu keturunannya.
     let ancestor: Component | undefined = target;
 
     while (ancestor) {
         if (ancestor === source) {
-            return false;
+            return reject('target adalah source atau keturunannya');
         }
 
         ancestor = ancestor.parent() ?? undefined;
     }
+
+    console.debug('[DnD][VALIDATION] ACCEPT', {
+        source: {
+            id: source.getId(),
+            tagName: sourceTag,
+            className: sourceClass,
+        },
+        target: {
+            id: target.getId(),
+            tagName: targetTag,
+            className: targetClass,
+        },
+    });
 
     return true;
 }
@@ -719,40 +735,61 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             index?: number;
         };
         
-        const handleDragStart = ({
-            target,
-        }: ComponentDragAuditEvent) => {
-            // GrapesJS mengizinkan target tidak tersedia.
+        const handleDragStart = ({ target, parent, index }: { target?: Component; parent?: Component; index?: number; }) => {
+            
             if (!target) {
+                console.warn('[DnD][START] target undefined');
                 return;
             }
         
-            const component = target;
-            const before = getComponentLocation(component);
+            const el = target.getEl();
         
-            dragAudit.set(component.getId(), {
-                component,
-                before,
+            console.group('[DnD][START]');
+            console.log('Model ID:', target.getId());
+            console.log('Model tagName:', target.get('tagName'));
+            console.log('Model type:', target.get('type'));
+            console.log('Model content:', target.get('content'));
+            console.log('Model attributes:', target.getAttributes());
+            console.log('DOM element:', el);
+            console.log('DOM tagName:', el?.tagName);
+            console.log('DOM text:', el?.textContent);
+            console.log('Parent ID:', parent?.getId());
+            console.log('Parent tagName:', parent?.get('tagName'));
+            console.log('Index:', index);
+            console.trace('[DnD][START] trace');
+            
+            console.groupEnd();
+        
+            dragAudit.set(target.getId(), {
+                component: target,
+                before: getComponentLocation(target),
             });
-        
-            console.log('[DnD] BEFORE', before);
         };
-        
-        const handleDragEnd = ({
-            target,
-            parent,
-            index,
-        }: ComponentDragAuditEvent) => {
+
+        const handleDragEnd = ({ target, parent, index }: ComponentDragAuditEvent) => {
             // Jangan mengakses komponen jika target tidak tersedia.
             if (!target) {
-                console.warn(
-                    '[DnD] Drag ended without a component target.',
-                );
+                console.warn('[DnD] Drag ended without a component target.');
                 return;
             }
         
             const component = target;
             const snapshot = dragAudit.get(component.getId());
+            
+            if (target && parent) {
+                const moveCheck = editor.Components.canMove(parent,target,index);
+            
+                console.log('[DnD][CAN MOVE]', {
+                    sourceId: target.getId(),
+                    targetParentId: parent.getId(),
+                    targetParentTag: parent.get('tagName'),
+                    targetParentClass: parent.getAttributes().class || '',
+                    candidateIndex: index,
+                    result: moveCheck.result,
+                    reason: moveCheck.reason,
+                });
+            }
+
         
             requestAnimationFrame(() => {
                 const after = getComponentLocation(component);
@@ -764,10 +801,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                 console.log('Drop candidate index:', index);
                 console.log('Actual model after:', after);
                 console.log('Rendered element exists:', Boolean(element));
-                console.log(
-                    'Rendered element connected:',
-                    Boolean(element?.isConnected),
-                );
+                console.log('Rendered element connected:', Boolean(element?.isConnected));
                 console.log('Component JSON:', component.toJSON());
                 console.groupEnd();
         
@@ -779,7 +813,32 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             });
         };
         
+        const handleDragMove = ({ target, parent, index }: { target?: Component; parent?: Component; index?: number; }) => {
+            
+            if (!target) {
+                return;
+            }
+        
+            console.log('[DnD][MOVE]', {
+                source: {
+                    id: target.getId(),
+                    tagName: target.get('tagName'),
+                    type: target.get('type'),
+                    content: target.get('content'),
+                },
+                candidateParent: parent
+                    ? {
+                          id: parent.getId(),
+                          tagName: parent.get('tagName'),
+                          type: parent.get('type'),
+                  }
+                    : null,
+                candidateIndex: index,
+            });
+        };
+        
         editor.on('component:drag:start', handleDragStart);
+        editor.on('component:drag', handleDragMove);
         editor.on('component:drag:end', handleDragEnd);
 
         editor.on('component:selected', () => syncSelection(editor));
@@ -931,6 +990,7 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             editor.off('styleable:change', markDraftUnsaved);
             editor.off('component:drag:start', handleDragStart);
             editor.off('component:drag:end', handleDragEnd);
+            editor.off('component:drag', handleDragMove);
             editor.destroy();
             editorRef.current = null;
         };
