@@ -79,6 +79,26 @@ input,
 textarea,
 select {
     font: inherit;
+    margin: 0 6px;
+    display: block;
+}
+
+input, select {
+    border: none;
+    border-bottom: 1px solid var(--color-accent);
+    margin: 6px 0;
+    padding: 10px 0;
+    width: 50%;
+    background-color: var(--color-page);
+}
+
+input:focus {
+    border: none;
+    border-bottom: 2px solid var(--color-accent);
+}
+
+label {
+    display: block;
 }
 
 img,
@@ -727,9 +747,10 @@ svg {
 
 .dashboard-stat {
     min-width: 0;
-    padding: 22px;
+    padding: 16px;
+    margin: 10px;
     border: 1px solid var(--app-border);
-    border-radius: 15px;
+    /* border-radius: 15px; */
     background: var(--app-surface);
 }
 

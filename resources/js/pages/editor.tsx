@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import grapesjs, { type Component, type Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -7,7 +7,9 @@ import { elementCategories, elementRegistry, type EditorBlock } from '../lib/web
 import '../../css/editor.scss';
 
 type EditorPageProps = {
+    websiteId: number;
     websiteSlug: string;
+    websiteContent: Record<string, unknown> | null;
 };
 
 const emptyStyles: InspectorStyles = {
@@ -30,9 +32,14 @@ const emptyStyles: InspectorStyles = {
     gap: '',
     width: '',
     maxWidth: '',
+    height: '',
+    minHeight: '',
     margin: '',
     padding: '',
     borderRadius: '',
+    borderWidth: '',
+    borderStyle: '',
+    borderColor: '',
 };
 
 function getNavigatorItems(editor: Editor): NavigatorItem[] {
@@ -89,8 +96,7 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
     const tagName = String(selected.get('tagName') || 'div').toLowerCase();
     const element = selected.getEl();
     const view = element?.ownerDocument?.defaultView;
-    const computedStyles =
-        element && view ? view.getComputedStyle(element) : null;
+    const computedStyles = element && view ? view.getComputedStyle(element) : null;
 
     const editableTags = [
         'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -129,11 +135,16 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
         justifyContent: readStyle('justify-content', 'justifyContent'),
         alignItems: readStyle('align-items', 'alignItems'),
         gap: readStyle('gap', 'gap'),
-        width: readStyle('width', 'width'),
+        width: isLayoutColumn(selected) ? String(attributes['data-wb-width'] || '') : readStyle('width', 'width'),
         maxWidth: readStyle('max-width', 'maxWidth'),
+        height: readStyle('height', 'height'),
+        minHeight: readStyle('min-height', 'minHeight'),
         margin: readStyle('margin', 'margin'),
         padding: readStyle('padding', 'padding'),
         borderRadius: readStyle('border-radius', 'borderRadius'),
+        borderWidth: readStyle('border-width', 'borderWidth'),
+        borderStyle: readStyle('border-style', 'borderStyle'),
+        borderColor: readStyle('border-color', 'borderColor'),
     };
 }
 
@@ -160,7 +171,196 @@ function createLayoutMarkup(columns: 1 | 2 | 3 | 4): string {
     `;
 }
 
-export default function EditorPage({ websiteSlug }: EditorPageProps) {
+function canContainComponents(component: Component): boolean {
+    const tagName = String(component.get('tagName') || '').toLowerCase();
+    const voidTags = new Set([
+        'area', 'base', 'br', 'col', 'embed', 'hr', 'img',
+        'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+    ]);
+
+    return component.get('droppable') !== false && !voidTags.has(tagName);
+}
+
+const DROP_TARGET_TAGS = new Set([
+    'div',
+    'section',
+    'main',
+    'header',
+    'footer',
+    'article',
+    'nav',
+    'aside',
+]);
+
+const VOID_TAGS = new Set([
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr',
+]);
+
+function isLayoutColumn(component: Component): boolean {
+    const className = String(
+        component.getAttributes().class || '',
+    );
+
+    return className.split(/\s+/).includes('wb-layout-column');
+}
+
+function canAcceptNativeDrop(
+    source: Component,
+    target: Component,
+): boolean {
+    if (!source || !target || source === target) {
+        return false;
+    }
+
+    const sourceTag = String(
+        source.get('tagName') || '',
+    ).toLowerCase();
+
+    const targetTag = String(
+        target.get('tagName') || '',
+    ).toLowerCase();
+
+    if (
+        sourceTag === 'body' ||
+        source.is('wrapper') ||
+        VOID_TAGS.has(targetTag)
+    ) {
+        return false;
+    }
+
+    const isValidTarget =
+        DROP_TARGET_TAGS.has(targetTag) ||
+        isLayoutColumn(target);
+
+    if (!isValidTarget) {
+        return false;
+    }
+
+    // Jangan izinkan komponen dipindahkan ke dalam
+    // dirinya sendiri atau salah satu keturunannya.
+    let ancestor: Component | undefined = target;
+
+    while (ancestor) {
+        if (ancestor === source) {
+            return false;
+        }
+
+        ancestor = ancestor.parent() ?? undefined;
+    }
+
+    return true;
+}
+
+function enableComponentDragDrop(
+    component: Component,
+): void {
+    const tagName = String(component.get('tagName') || '').toLowerCase();
+
+    const canBeMoved = !VOID_TAGS.has(tagName);
+
+    component.set({
+        draggable: canBeMoved
+            ? (
+                source: Component,
+                target: Component,
+            ) => canAcceptNativeDrop(source, target)
+            : false,
+
+        droppable: (
+            source: Component,
+            target: Component,
+        ) => canAcceptNativeDrop(source, target),
+    });
+
+    component.components().models.forEach((child) => {
+        enableComponentDragDrop(child);
+    });
+}
+
+function updateLayoutColumnWidths(parent: Component): void {
+    const components = parent.components().models as Component[];
+
+    const columns = components.filter((component: Component) =>
+        isLayoutColumn(component),
+    );
+
+    if (columns.length === 0) {
+        return;
+    }
+
+    const explicitWidths: (number | null)[] = columns.map((column: Component): number | null => {
+            const value = String(column.getAttributes()['data-wb-width'] || '').trim();
+
+            if (!/^\d+(?:\.\d+)?%$/.test(value)) {
+                return null;
+            }
+
+            const width = Number.parseFloat(value);
+
+            return Number.isFinite(width) && width > 0 && width <= 100 ? width : null;
+        }
+    );
+
+    const specifiedTotal = explicitWidths.reduce<number>((total, width) => total + (width ?? 0), 0);
+
+    const unspecifiedCount = explicitWidths.filter((width) => width === null).length;
+
+    const remaining = Math.max(0, 100 - specifiedTotal);
+
+    const automaticWidth = unspecifiedCount > 0 ? remaining / unspecifiedCount : 0;
+
+    const widths = explicitWidths.map((width) => width ?? automaticWidth);
+
+    const total = widths.reduce<number>((sum, width) => sum + width, 0);
+
+    const normalizedWidths = total > 100 ? widths.map((width) => (width / total) * 100) : widths;
+
+    parent.setStyle({
+        ...parent.getStyle(), 'grid-template-columns': normalizedWidths.map((width) => `minmax(0, ${width}fr)`).join(' ')
+    });
+}
+
+type ComponentLocation = {
+    id: string;
+    tagName: string;
+    parentId: string | null;
+    parentTag: string | null;
+    index: number;
+};
+
+function getComponentLocation(
+    component: Component,
+): ComponentLocation {
+    const parent = component.parent();
+
+    return {
+        id: component.getId(),
+        tagName: String(component.get('tagName') || 'div'),
+        parentId: parent?.getId() ?? null,
+        parentTag: parent
+            ? String(parent.get('tagName') || 'div')
+            : null,
+        index: component.index(),
+    };
+}
+
+export default function EditorPage({ websiteSlug, websiteId, websiteContent }: EditorPageProps) {
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'unsaved' | 'saving' | 'error'>(
+        websiteContent ? 'saved' : 'unsaved',
+    );
     const [blocksOpen, setBlocksOpen] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(true);
     const [preview, setPreview] = useState(false);
@@ -229,6 +429,28 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
     const syncNavigator = useCallback((editor: Editor) => {
         setNavigatorItems(getNavigatorItems(editor));
     }, []);
+        
+    const saveDraft = useCallback(() => {
+        const editor = editorRef.current;
+    
+        if (!editor) {
+            return;
+        }
+    
+        const content = editor.getProjectData();
+    
+        router.put(`/websites/${websiteId}/draft`, { content }, {
+                preserveScroll: true,
+                onStart: () => setSaveStatus('saving'),
+                onSuccess: () => setSaveStatus('saved'),
+                onError: () => setSaveStatus('error'),
+            },
+        );
+    }, [websiteId]);
+    
+    const markDraftUnsaved = useCallback(() => {
+        setSaveStatus((current) => current === 'saving' ? current : 'unsaved');
+    }, []);
 
     useEffect(() => {
         const container = canvasRef.current;
@@ -245,6 +467,8 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
 
             // Penyimpanan akan ditambahkan pada tahap berikutnya.
             storageManager: false,
+            
+            projectData: websiteContent ?? undefined,
 
             // Kita menggunakan panel React sendiri.
             panels: {
@@ -299,16 +523,32 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             });
         });
 
-        editor.setComponents(`
-            <section class="wb-hero">
-                <p class="wb-eyebrow">WELCOME</p>
-                <h1>Build that something awesome.</h1>
-                <p>It is front page. Select block from left panel to start arrange website</p>
-                <a class="wb-hero__button" href="#">
-                    Start now
-                </a>
-            </section>
-        `);
+        const hasSavedProject =
+            websiteContent !== null &&
+            websiteContent !== undefined &&
+            Object.keys(websiteContent).length > 0;
+        
+        if (!hasSavedProject) {
+            editor.setComponents(`
+                <section class="wb-hero">
+                    <p class="wb-eyebrow">WELCOME</p>
+                    <h1>Build that something awesome.</h1>
+                    <p>
+                        It is front page. Select block from left panel
+                        to start arrange website
+                    </p>
+                    <a class="wb-hero__button" href="#">
+                        Start now
+                    </a>
+                </section>
+            `);
+        }
+        
+        const wrapper = editor.getWrapper();
+        
+        if (wrapper) {
+            enableComponentDragDrop(wrapper);
+        }
 
         editor.setStyle(`
             body {
@@ -417,6 +657,56 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             syncSelection(editor);
         };
         
+        
+        const handleComponentAdded = (component: Component) => {
+            enableComponentDragDrop(component);
+        };
+        
+        editor.on('component:add', handleComponentAdded);
+        
+        const dragAudit = new Map<string, { component: Component; before: ComponentLocation; }>();
+        
+        const handleDragStart = ({ target }: { target: Component; parent: Component; index: number; }) => {
+            const component = target;
+            const before = getComponentLocation(component);
+        
+            dragAudit.set(component.getId(), {
+                component,
+                before,
+            });
+        
+            console.log('[DnD] BEFORE', before);
+        };
+        
+        const handleDragEnd = ({ target, parent, index }: { target: Component; parent: Component; index: number; }) => {
+            const component = target;
+            const snapshot = dragAudit.get(component.getId());
+        
+            requestAnimationFrame(() => {
+                const after = getComponentLocation(component);
+                const element = component.getEl();
+        
+                console.group('[DnD] RESULT');
+                console.log('Before:', snapshot?.before ?? null);
+                console.log('Drop candidate parent:', parent?.getId() ?? null);
+                console.log('Drop candidate index:', index);
+                console.log('Actual model after:', after);
+                console.log('Rendered element exists:', Boolean(element));
+                console.log('Rendered element connected:', Boolean(element?.isConnected));
+                console.log('Component JSON:', component.toJSON());
+                console.groupEnd();
+        
+                dragAudit.delete(component.getId());
+        
+                syncNavigator(editor);
+                syncSelection(editor);
+                markDraftUnsaved();
+            });
+        };
+        
+        editor.on('component:drag:start', handleDragStart);
+        editor.on('component:drag:end', handleDragEnd);
+
         editor.on('component:selected', () => syncSelection(editor));
         editor.on('component:deselected', () => syncSelection(editor));
         editor.on('styleable:change', handleStyleableChange);
@@ -435,6 +725,12 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                 }
             });
         };
+        
+        editor.on('component:add', markDraftUnsaved);
+        editor.on('component:remove', markDraftUnsaved);
+        editor.on('component:update', markDraftUnsaved);
+        editor.on('component:styleUpdate', markDraftUnsaved);
+        editor.on('styleable:change', markDraftUnsaved);
         
         editor.on('component:add', refreshNavigator);
         editor.on('component:remove', refreshNavigator);
@@ -546,28 +842,45 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             editor.off('component:remove', refreshNavigator);
             editor.off('component:drag:end', refreshNavigator);
             editor.off('component:add', refreshHistory);
+            editor.off('component:add', handleComponentAdded);
             editor.off('component:remove', refreshHistory);
             editor.off('component:update', refreshHistory);
             editor.off('component:styleUpdate', refreshHistory);
             editor.off('styleable:change', handleStyleableChange);
             editor.off('undo', refreshHistory);
             editor.off('redo', refreshHistory);
+            editor.off('component:add', markDraftUnsaved);
+            editor.off('component:remove', markDraftUnsaved);
+            editor.off('component:update', markDraftUnsaved);
+            editor.off('component:styleUpdate', markDraftUnsaved);
+            editor.off('styleable:change', markDraftUnsaved);
+            editor.off('component:drag:start', handleDragStart);
+            editor.off('component:drag:end', handleDragEnd);
             editor.destroy();
             editorRef.current = null;
         };
-    }, [syncSelection, syncHistory, syncNavigator]);
+    }, [syncSelection, syncHistory, syncNavigator, markDraftUnsaved]);
 
     const addBlock = (block: EditorBlock) => {
         const editor = editorRef.current;
+        const wrapper = editor?.getWrapper();
     
-        if (!editor) return;
+        if (!editor || !wrapper) return;
     
-        const added = editor.addComponents(block.content);
-        const component = added.at(0);
+        const selected = editor.getSelected();
+    
+        const target = selected && canContainComponents(selected)
+            ? selected
+            : selected?.parent() ?? wrapper;
+    
+        const added = target.append(block.content);
+        const component = added[0];
     
         if (component) {
             editor.select(component);
             syncSelection(editor);
+            syncNavigator(editor);
+            syncHistory(editor);
         }
     };
 
@@ -590,6 +903,48 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             syncSelection(editor);
             return;
         }
+        
+        if (property === 'width' && isLayoutColumn(selected)) {
+            const parent = selected.parent();
+        
+            if (!parent) {
+                return;
+            }
+        
+            const normalizedValue = value.trim();
+        
+            // Pertahankan nilai yang sedang diketik, termasuk nilai sementara.
+            setStyles((current) => ({
+                ...current,
+                width: value,
+            }));
+        
+            if (normalizedValue === '') {
+                selected.removeAttributes('data-wb-width');
+                updateLayoutColumnWidths(parent);
+                return;
+            }
+        
+            // Lebar khusus kolom saat ini menggunakan satuan persen.
+            // Jangan menolak input sementara seperti "5" ketika mengetik "50%".
+            if (!/^\d+(?:\.\d+)?%$/.test(normalizedValue)) {
+                return;
+            }
+        
+            const width = Number.parseFloat(normalizedValue);
+        
+            if (!Number.isFinite(width) || width <= 0 || width > 100) {
+                return;
+            }
+        
+            selected.addAttributes({
+                'data-wb-width': normalizedValue,
+            });
+        
+            updateLayoutColumnWidths(parent);
+            return;
+        }
+
     
         const cssProperties: Partial<Record<InspectorProperty, string>> = {
             color: 'color',
@@ -606,9 +961,14 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
             gap: 'gap',
             width: 'width',
             maxWidth: 'max-width',
+            height: 'height',
+            minHeight: 'min-height',
             margin: 'margin',
             padding: 'padding',
             borderRadius: 'border-radius',
+            borderWidth: 'border-width',
+            borderStyle: 'border-style',
+            borderColor: 'border-color',
         };
     
         const cssProperty = cssProperties[property];
@@ -760,8 +1120,7 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
         
         const target = selected && containerTags.includes(selectedTag) ? selected : wrapper;
     
-        const columnMarkup = Array.from(
-            { length: columns },
+        const columnMarkup = Array.from({ length: columns },
             (_, index) => `
                 <div class="wb-layout-column">
                     <h3>Column ${index + 1}</h3>
@@ -833,6 +1192,8 @@ export default function EditorPage({ websiteSlug }: EditorPageProps) {
                     setNavigatorOpen((open) => !open);
                 }}
                 onAddLayoutPreset={addLayoutPreset}
+                saveStatus={saveStatus}
+                onSaveDraft={saveDraft}
             >
                 <div
                     id="gjs-canvas"
