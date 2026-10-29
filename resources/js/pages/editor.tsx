@@ -32,6 +32,8 @@ const emptyStyles: InspectorStyles = {
     gap: '',
     width: '',
     maxWidth: '',
+    height: '',
+    minHeight: '',
     margin: '',
     padding: '',
     borderRadius: '',
@@ -135,6 +137,8 @@ function getSelectedStyles(editor: Editor): InspectorStyles {
         gap: readStyle('gap', 'gap'),
         width: isLayoutColumn(selected) ? String(attributes['data-wb-width'] || '') : readStyle('width', 'width'),
         maxWidth: readStyle('max-width', 'maxWidth'),
+        height: readStyle('height', 'height'),
+        minHeight: readStyle('min-height', 'minHeight'),
         margin: readStyle('margin', 'margin'),
         padding: readStyle('padding', 'padding'),
         borderRadius: readStyle('border-radius', 'borderRadius'),
@@ -205,39 +209,85 @@ const VOID_TAGS = new Set([
     'wbr',
 ]);
 
-function enableComponentDragDrop(component: Component): void {
-    const tagName = String(
-        component.get('tagName') || '',
+function isLayoutColumn(component: Component): boolean {
+    const className = String(
+        component.getAttributes().class || '',
+    );
+
+    return className.split(/\s+/).includes('wb-layout-column');
+}
+
+function canAcceptNativeDrop(
+    source: Component,
+    target: Component,
+): boolean {
+    if (!source || !target || source === target) {
+        return false;
+    }
+
+    const sourceTag = String(
+        source.get('tagName') || '',
     ).toLowerCase();
 
-    const attributes = component.getAttributes();
-    const classNames = String(attributes.class || '')
-        .split(/\s+/)
-        .filter(Boolean);
+    const targetTag = String(
+        target.get('tagName') || '',
+    ).toLowerCase();
 
-    const isLayoutColumn =
-        classNames.includes('wb-layout-column');
-
-    // Parent harus menerima komponen yang diseret.
-    if (DROP_TARGET_TAGS.has(tagName) || isLayoutColumn) {
-        component.set('droppable', true);
+    if (
+        sourceTag === 'body' ||
+        source.is('wrapper') ||
+        VOID_TAGS.has(targetTag)
+    ) {
+        return false;
     }
 
-    // Komponen non-void dapat dipindahkan dari canvas.
-    if (!VOID_TAGS.has(tagName)) {
-        component.set('draggable', true);
+    const isValidTarget =
+        DROP_TARGET_TAGS.has(targetTag) ||
+        isLayoutColumn(target);
+
+    if (!isValidTarget) {
+        return false;
     }
 
-    // Terapkan juga ke komponen anak, termasuk konten lama.
+    // Jangan izinkan komponen dipindahkan ke dalam
+    // dirinya sendiri atau salah satu keturunannya.
+    let ancestor: Component | undefined = target;
+
+    while (ancestor) {
+        if (ancestor === source) {
+            return false;
+        }
+
+        ancestor = ancestor.parent() ?? undefined;
+    }
+
+    return true;
+}
+
+function enableComponentDragDrop(
+    component: Component,
+): void {
+    const tagName = String(component.get('tagName') || '').toLowerCase();
+
+    const canBeMoved = !VOID_TAGS.has(tagName);
+
+    component.set({
+        draggable: canBeMoved
+            ? (
+                source: Component,
+                target: Component,
+            ) => canAcceptNativeDrop(source, target)
+            : false,
+
+        droppable: (
+            source: Component,
+            target: Component,
+        ) => canAcceptNativeDrop(source, target),
+    });
+
     component.components().models.forEach((child) => {
         enableComponentDragDrop(child);
     });
-}
-
-function isLayoutColumn(component: Component): boolean {
-    const className = String(component.getAttributes().class || '');
-
-    return className.split(/\s+/).includes('wb-layout-column');
 }
 
 function updateLayoutColumnWidths(parent: Component): void {
@@ -281,6 +331,30 @@ function updateLayoutColumnWidths(parent: Component): void {
     parent.setStyle({
         ...parent.getStyle(), 'grid-template-columns': normalizedWidths.map((width) => `minmax(0, ${width}fr)`).join(' ')
     });
+}
+
+type ComponentLocation = {
+    id: string;
+    tagName: string;
+    parentId: string | null;
+    parentTag: string | null;
+    index: number;
+};
+
+function getComponentLocation(
+    component: Component,
+): ComponentLocation {
+    const parent = component.parent();
+
+    return {
+        id: component.getId(),
+        tagName: String(component.get('tagName') || 'div'),
+        parentId: parent?.getId() ?? null,
+        parentTag: parent
+            ? String(parent.get('tagName') || 'div')
+            : null,
+        index: component.index(),
+    };
 }
 
 export default function EditorPage({ websiteSlug, websiteId, websiteContent }: EditorPageProps) {
@@ -449,15 +523,26 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             });
         });
 
-        editor.setComponents(`<section class="wb-hero">
-                <p class="wb-eyebrow">WELCOME</p>
-                <h1>Build that something awesome.</h1>
-                <p>It is front page. Select block from left panel to start arrange website</p>
-                <a class="wb-hero__button" href="#">
-                    Start now
-                </a>
-            </section>
-        `);
+        const hasSavedProject =
+            websiteContent !== null &&
+            websiteContent !== undefined &&
+            Object.keys(websiteContent).length > 0;
+        
+        if (!hasSavedProject) {
+            editor.setComponents(`
+                <section class="wb-hero">
+                    <p class="wb-eyebrow">WELCOME</p>
+                    <h1>Build that something awesome.</h1>
+                    <p>
+                        It is front page. Select block from left panel
+                        to start arrange website
+                    </p>
+                    <a class="wb-hero__button" href="#">
+                        Start now
+                    </a>
+                </section>
+            `);
+        }
         
         const wrapper = editor.getWrapper();
         
@@ -578,6 +663,49 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         };
         
         editor.on('component:add', handleComponentAdded);
+        
+        const dragAudit = new Map<string, { component: Component; before: ComponentLocation; }>();
+        
+        const handleDragStart = ({ target }: { target: Component; parent: Component; index: number; }) => {
+            const component = target;
+            const before = getComponentLocation(component);
+        
+            dragAudit.set(component.getId(), {
+                component,
+                before,
+            });
+        
+            console.log('[DnD] BEFORE', before);
+        };
+        
+        const handleDragEnd = ({ target, parent, index }: { target: Component; parent: Component; index: number; }) => {
+            const component = target;
+            const snapshot = dragAudit.get(component.getId());
+        
+            requestAnimationFrame(() => {
+                const after = getComponentLocation(component);
+                const element = component.getEl();
+        
+                console.group('[DnD] RESULT');
+                console.log('Before:', snapshot?.before ?? null);
+                console.log('Drop candidate parent:', parent?.getId() ?? null);
+                console.log('Drop candidate index:', index);
+                console.log('Actual model after:', after);
+                console.log('Rendered element exists:', Boolean(element));
+                console.log('Rendered element connected:', Boolean(element?.isConnected));
+                console.log('Component JSON:', component.toJSON());
+                console.groupEnd();
+        
+                dragAudit.delete(component.getId());
+        
+                syncNavigator(editor);
+                syncSelection(editor);
+                markDraftUnsaved();
+            });
+        };
+        
+        editor.on('component:drag:start', handleDragStart);
+        editor.on('component:drag:end', handleDragEnd);
 
         editor.on('component:selected', () => syncSelection(editor));
         editor.on('component:deselected', () => syncSelection(editor));
@@ -726,6 +854,8 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             editor.off('component:update', markDraftUnsaved);
             editor.off('component:styleUpdate', markDraftUnsaved);
             editor.off('styleable:change', markDraftUnsaved);
+            editor.off('component:drag:start', handleDragStart);
+            editor.off('component:drag:end', handleDragEnd);
             editor.destroy();
             editorRef.current = null;
         };
@@ -831,6 +961,8 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             gap: 'gap',
             width: 'width',
             maxWidth: 'max-width',
+            height: 'height',
+            minHeight: 'min-height',
             margin: 'margin',
             padding: 'padding',
             borderRadius: 'border-radius',

@@ -68,6 +68,8 @@ export type InspectorStyles = {
     gap: string;
     width: string;
     maxWidth: string;
+    height: string;
+    minHeight: string;
     margin: string;
     padding: string;
     borderRadius: string;
@@ -105,6 +107,8 @@ export type InspectorProperty =
     | 'gap'
     | 'width'
     | 'maxWidth'
+    | 'height'
+    | 'minHeight'
     | 'margin'
     | 'padding'
     | 'borderRadius'

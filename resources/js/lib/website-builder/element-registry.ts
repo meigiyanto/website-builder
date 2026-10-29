@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Type, AlignLeft, Image, Columns, MousePointerClick, Square, Columns3, Minus, ArrowUpDown, PanelsTopLeft, PanelBottom, LayoutGrid, Menu, ListOrdered, List, Quote, CircleHelp, TriangleAlert, BadgeCheck, Play, Images, Mail, Sparkles, MessageSquareQuote, CreditCard, ChartNoAxesCombined, ArrowRight, ShoppingBag, Table } from 'lucide-react';
+import { Type, AlignLeft, Image, Columns, MousePointerClick, Square, Columns3, Minus, ArrowUpDown, PanelsTopLeft, PanelBottom, LayoutGrid, Menu, ListOrdered, List, Quote, CircleHelp, TriangleAlert, BadgeCheck, Play, Images, Mail, Sparkles, MessageSquareQuote, CreditCard, ChartNoAxesCombined, ArrowRight, ShoppingBag, Table, CircleCheckBig, SquareCheckBig, Logs } from 'lucide-react';
 
 
 export type ElementCategory =
@@ -271,6 +271,35 @@ export const elementRegistry: EditorBlock[] = [
     },
 
     /* Form 1 block */
+    {
+        id: 'wb-input-checkbox',
+        label: 'Checkbox',
+        lucideIcon: SquareCheckBig,
+        category: 'Form',
+        content: `<label>Checkbox input</label>
+        <input type="checkbox" value="" />`
+    },
+    {
+        id: 'wb-input-radio',
+        label: 'Radio',
+        lucideIcon: CircleCheckBig,
+        category: 'Form',
+        content: `<label>Radio input</label>
+        <input type="radio" value="" />`
+    },
+    {
+        id: 'wb-input-select',
+        label: 'Select',
+        lucideIcon: Logs,
+        category: 'Form',
+        content: `<label style="margin-bottom="10px">Choose One</label>
+        <select style="margin: 5px 0, width: 100%; padding: 6px; background-color: inherit; border: none; border: 2px solid black;">
+    <option value="option-1">Option 1</option>
+    <option value="option-2">Option 2</option>
+    <option value="option-3">Option 3</option>
+    <option value="option-4">Option 4</option>
+</select>`
+    },
     {
         id: 'wb-contact-form',
         label: 'Contact Form',
