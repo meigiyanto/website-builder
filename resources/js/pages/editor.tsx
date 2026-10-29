@@ -272,17 +272,8 @@ function enableComponentDragDrop(
     const canBeMoved = !VOID_TAGS.has(tagName);
 
     component.set({
-        draggable: canBeMoved
-            ? (
-                source: Component,
-                target: Component,
-            ) => canAcceptNativeDrop(source, target)
-            : false,
-
-        droppable: (
-            source: Component,
-            target: Component,
-        ) => canAcceptNativeDrop(source, target),
+        draggable: canBeMoved ? (source: Component, target: Component ) => canAcceptNativeDrop(source, target) : false,
+        droppable: (source: Component, target: Component) => canAcceptNativeDrop(source, target)
     });
 
     component.components().models.forEach((child) => {
@@ -488,7 +479,63 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                 styles: [],
             },
         });
+        const rteModule = editor.RichTextEditor;
+        const originalLinkAction = rteModule.get('link');
         
+        if (originalLinkAction) {
+            rteModule.remove('link');
+        
+            rteModule.add('link', {
+                ...originalLinkAction,
+        
+                result: (rte) => {
+                    const selection = rte.doc.getSelection();
+        
+                    if (!selection || selection.rangeCount === 0) {
+                        return;
+                    }
+        
+                    const range = selection.getRangeAt(0).cloneRange();
+        
+                    if (range.collapsed || !range.toString().trim()) {
+                        return;
+                    }
+        
+                    const startNode = range.startContainer;
+                    const startElement =
+                        startNode.nodeType === 1
+                            ? startNode as Element
+                            : startNode.parentElement;
+        
+                    const existingLink = startElement?.closest('a');
+                    const currentUrl = existingLink?.getAttribute('href') ?? '';
+        
+                    const url = rte.doc.defaultView?.prompt(
+                        'Masukkan URL tujuan:',
+                        currentUrl,
+                    );
+        
+                    if (url === null || url === undefined) {
+                        return;
+                    }
+        
+                    const trimmedUrl = url.trim();
+        
+                    if (!trimmedUrl) {
+                        return;
+                    }
+        
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+        
+                    if (existingLink) {
+                        existingLink.setAttribute('href', trimmedUrl);
+                    } else {
+                        rte.exec('createLink', trimmedUrl);
+                    }
+                },
+            });
+        }
         ([1, 2, 3, 4] as const).forEach((columns) => {
             editor.BlockManager.add(`wb-layout-${columns}`, {
                 label: `Layout ${columns} column`,
@@ -666,7 +713,20 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
         
         const dragAudit = new Map<string, { component: Component; before: ComponentLocation; }>();
         
-        const handleDragStart = ({ target }: { target: Component; parent: Component; index: number; }) => {
+        type ComponentDragAuditEvent = {
+            target?: Component;
+            parent?: Component;
+            index?: number;
+        };
+        
+        const handleDragStart = ({
+            target,
+        }: ComponentDragAuditEvent) => {
+            // GrapesJS mengizinkan target tidak tersedia.
+            if (!target) {
+                return;
+            }
+        
             const component = target;
             const before = getComponentLocation(component);
         
@@ -678,7 +738,19 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
             console.log('[DnD] BEFORE', before);
         };
         
-        const handleDragEnd = ({ target, parent, index }: { target: Component; parent: Component; index: number; }) => {
+        const handleDragEnd = ({
+            target,
+            parent,
+            index,
+        }: ComponentDragAuditEvent) => {
+            // Jangan mengakses komponen jika target tidak tersedia.
+            if (!target) {
+                console.warn(
+                    '[DnD] Drag ended without a component target.',
+                );
+                return;
+            }
+        
             const component = target;
             const snapshot = dragAudit.get(component.getId());
         
@@ -692,7 +764,10 @@ export default function EditorPage({ websiteSlug, websiteId, websiteContent }: E
                 console.log('Drop candidate index:', index);
                 console.log('Actual model after:', after);
                 console.log('Rendered element exists:', Boolean(element));
-                console.log('Rendered element connected:', Boolean(element?.isConnected));
+                console.log(
+                    'Rendered element connected:',
+                    Boolean(element?.isConnected),
+                );
                 console.log('Component JSON:', component.toJSON());
                 console.groupEnd();
         

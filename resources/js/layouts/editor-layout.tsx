@@ -3,7 +3,7 @@ import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNod
 import type { EditorBlock } from '../lib/website-builder/element-registry';
 import type { Component } from 'grapesjs';
 import { Palette, ArrowLeft, Eye, EyeOff, Undo, Undo2, Redo2, ArrowRight, ArrowUpDown, BadgeCheck, ChartNoAxesCombined, CircleHelp, Columns3, Columns, CreditCard, Image as ImageIcon, Images, LayoutGrid, List, ListOrdered, Mail, Menu, MessageSquareQuote, Minus, MousePointerClick, PanelBottom, PanelsTopLeft, Play, Quote, ShoppingBag, Sparkles, Square, TriangleAlert, Type,
-TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyCenter, AlignHorizontalJustifyStart, AlignHorizontalSpaceAround, AlignHorizontalSpaceBetween, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, AlignVerticalSpaceAround, AlignVerticalSpaceBetween, AlignLeft, AlignCenter, AlignRight, AlignJustify, RotateCcw, StretchVertical, Save, RotateCw, Send } from 'lucide-react';
+TextAlignStart, TextAlignEnd, TextAlignJustify, TextAlignCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyCenter, AlignHorizontalJustifyStart, AlignHorizontalSpaceAround, AlignHorizontalSpaceBetween, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, AlignVerticalSpaceAround, AlignVerticalSpaceBetween, AlignLeft, AlignCenter, AlignRight, AlignJustify, RotateCcw, StretchVertical, Save, RotateCwFadingClock, Send } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful' ;
 import AppSelect from '../components/app-select';
 
@@ -464,7 +464,7 @@ export default function EditorLayout({
                         disabled={saveStatus === 'saving'}
                     >
                         {saveStatus === 'saving' ? (
-                            <RotateCw size={14} strokeWidth={1.8} aria-hidden="true" />
+                            <RotateCwFadingClock size={14} strokeWidth={1.8} aria-hidden="true" />
                         ) : (
                             <Save size={14} strokeWidth={1.8} aria-hidden="true" />
                         )}

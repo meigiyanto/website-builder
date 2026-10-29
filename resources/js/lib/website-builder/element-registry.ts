@@ -276,24 +276,22 @@ export const elementRegistry: EditorBlock[] = [
         label: 'Checkbox',
         lucideIcon: SquareCheckBig,
         category: 'Form',
-        content: `<label>Checkbox input</label>
-        <input type="checkbox" value="" />`
+        content: `<input type="checkbox" value="" /><label>Checkbox input</label><br>`
     },
     {
         id: 'wb-input-radio',
         label: 'Radio',
         lucideIcon: CircleCheckBig,
         category: 'Form',
-        content: `<label>Radio input</label>
-        <input type="radio" value="" />`
+        content: `<input type="radio" value="" /><label>Radio input</label><br>`
     },
     {
         id: 'wb-input-select',
         label: 'Select',
         lucideIcon: Logs,
         category: 'Form',
-        content: `<label style="margin-bottom="10px">Choose One</label>
-        <select style="margin: 5px 0, width: 100%; padding: 6px; background-color: inherit; border: none; border: 2px solid black;">
+        content: `<label>Choose One</label><br>
+        <select style="margin: 10px 0 10px 0, width: 100%; padding: 6px; background-color: inherit; border: none; border: 2px solid black;">
     <option value="option-1">Option 1</option>
     <option value="option-2">Option 2</option>
     <option value="option-3">Option 3</option>
